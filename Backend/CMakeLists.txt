@@ -13,6 +13,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Build dependencies as static libraries
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
+add_library(project_options INTERFACE)
+option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
+option(ENABLE_UBSAN "Enable Undefined Behavior Sanitizer" ON)
+option(ENABLE_TSAN "Enable Thread Sanitizer" OFF)
+option(ENABLE_LSAN "Enable Leak Sanitizer" OFF)
+include(Cmake/Sanitizers.cmake)
+myproject_enable_sanitizers(project_options ${ENABLE_ASAN} ${ENABLE_LSAN} ${ENABLE_UBSAN} ${ENABLE_TSAN} FALSE)
+
 include(FetchContent)
 
 # --------------------------------------------------
@@ -101,6 +109,7 @@ add_executable(
 target_link_libraries(
     WebPtt
     PRIVATE
+        project_options
         Boost::asio
         Boost::beast
         Boost::uuid
