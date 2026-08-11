@@ -104,6 +104,7 @@ FetchContent_MakeAvailable(
 add_executable(
     WebPtt
     src/main.cpp
+    src/Dsp/Gain.cpp
 )
 
 target_link_libraries(
