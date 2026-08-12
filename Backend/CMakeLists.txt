@@ -105,6 +105,11 @@ add_executable(
     WebPtt
     src/main.cpp
     src/Dsp/Gain.cpp
+    src/Api/Utils.cpp
+    src/Api/Listener.cpp
+    src/Api/Session.cpp
+    src/Api/Router.cpp
+    src/Api/AppRouter.cpp
 )
 
 target_link_libraries(
