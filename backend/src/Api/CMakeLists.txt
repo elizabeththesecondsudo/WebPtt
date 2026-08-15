@@ -1,0 +1,29 @@
+add_library(
+    WebPttApi
+    STATIC
+        AppRouter.cpp
+        Listener.cpp
+        Router.cpp
+        Session.cpp
+        Utils.cpp
+)
+
+target_include_directories(
+    WebPttApi
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/src
+)
+
+target_link_libraries(
+    WebPttApi
+    PUBLIC
+        project_options
+        Boost::asio
+        Boost::beast
+        Boost::uuid
+        datachannel
+        glaze::glaze
+        Threads::Threads
+    PRIVATE
+        spdlog::spdlog
+)
