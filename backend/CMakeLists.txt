@@ -90,6 +90,13 @@ FetchContent_Declare(
 )
 
 # --------------------------------------------------
+# SoundTouch
+# --------------------------------------------------
+
+set(SOUNDSTRETCH OFF CACHE BOOL "" FORCE)
+add_subdirectory(external/soundtouch EXCLUDE_FROM_ALL)
+
+# --------------------------------------------------
 # Fetch dependencies
 # --------------------------------------------------
 
@@ -124,6 +131,7 @@ target_link_libraries(
         Boost::uuid
         datachannel
         glaze::glaze
+        SoundTouch
         spdlog::spdlog
         Threads::Threads
 )
