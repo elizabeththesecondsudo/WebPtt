@@ -33,6 +33,8 @@ rules.ninja
 *.pdb
 *.dSYM/
 
+backend/external/
+
 
 # ==================================================
 # React / TypeScript / Node.js
