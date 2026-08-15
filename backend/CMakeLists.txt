@@ -11,7 +11,14 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
 include(cmake/ProjectOptions.cmake)
 include(cmake/Dependencies.cmake)
 
+configure_file(
+    ${PROJECT_SOURCE_DIR}/settings-example.toml
+    ${PROJECT_BINARY_DIR}/settings.toml
+    COPYONLY
+)
+
 add_subdirectory(src/Api)
+add_subdirectory(src/Core)
 
 add_executable(
     WebPtt
@@ -23,5 +30,6 @@ target_link_libraries(
     PRIVATE
         project_options
         WebPttApi
+        WebPttCore
         dr_wav_headers
 )

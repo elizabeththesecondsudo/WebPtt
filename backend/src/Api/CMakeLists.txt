@@ -24,6 +24,5 @@ target_link_libraries(
         datachannel
         glaze::glaze
         Threads::Threads
-    PRIVATE
         spdlog::spdlog
 )

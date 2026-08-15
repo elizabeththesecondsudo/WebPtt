@@ -1,13 +1,30 @@
 #include "Api/Listener.hpp"
 #include "Api/Utils.hpp"
+#include "Core/Settings.hpp"
+#include <spdlog/spdlog.h>
+#include <cstdlib>
 
 int main() {
     boost::asio::io_context io_context;
-    WebPtt::Api::Listener listener(
-        WebPtt::Api::create_acceptor(
-            io_context.get_executor(),
-            WebPtt::Api::Tcp::endpoint{boost::asio::ip::make_address("127.0.0.1"), 8080})
-            .value());
+
+    auto settings_res = WebPtt::Core::load_settings("settings.toml");
+    if (!settings_res) {
+        spdlog::critical("failed to load settings: {}", settings_res.error());
+        return EXIT_FAILURE;
+    }
+
+    auto settings = std::move(settings_res.value());
+    const auto& frontend_context = settings.frontend_context_;
+
+    auto acceptor_res =
+        WebPtt::Api::create_acceptor(io_context.get_executor(), frontend_context.address_, frontend_context.port_);
+
+    if (!acceptor_res) {
+        spdlog::critical("Failed to open an acceptor: {}", acceptor_res.error());
+        return EXIT_FAILURE;
+    }
+
+    WebPtt::Api::Listener listener(std::move(acceptor_res.value()));
     listener.listen();
     io_context.run();
     return 0;
