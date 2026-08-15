@@ -2,7 +2,7 @@
 #include "boost/beast/http/message_fwd.hpp"
 #include "boost/beast/http/string_body_fwd.hpp"
 
-namespace MediaPlane::Api {
+namespace WebPtt::Api {
 std::expected<Tcp::endpoint, std::string> parse_endpoint(std::string_view address, uint16_t port) {
     boost::system::error_code error;
     auto parsed_address = boost::asio::ip::make_address(address, error);
@@ -42,4 +42,4 @@ Http::response<Http::string_body> make_basic_api_response(const Http::request<Ht
     response.keep_alive(request.keep_alive());
     return response;
 }
-} // namespace MediaPlane::Api
+} // namespace WebPtt::Api

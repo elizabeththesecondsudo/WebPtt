@@ -1,7 +1,7 @@
 #include "Router.hpp"
 #include "Utils.hpp"
 
-namespace MediaPlane::Api {
+namespace WebPtt::Api {
 void Router::add_route(std::string_view target, Http::verb method, Handler handler) {
     ApiEndpoint endpoint{.target_ = target, .method_ = method};
     routes_[endpoint] = std::move(handler);
@@ -16,4 +16,4 @@ Http::response<Http::string_body> Router::route(const Http::request<Http::string
 
     return make_basic_api_response(request, Http::status::not_found);
 }
-} // namespace MediaPlane::Api
+} // namespace WebPtt::Api

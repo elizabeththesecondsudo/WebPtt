@@ -2,7 +2,7 @@
 
 #include "Effect.hpp"
 
-namespace MediaPlane::Dsp {
+namespace WebPtt::Dsp {
 class Gain final : public Effect {
 public:
     explicit Gain(float decibels = 0);
@@ -11,4 +11,4 @@ public:
 private:
     float gain_factor_;
 };
-} // namespace MediaPlane::Dsp
+} // namespace WebPtt::Dsp

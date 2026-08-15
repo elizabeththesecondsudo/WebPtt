@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(MediaPlane LANGUAGES CXX)
+project(WebPtt LANGUAGES CXX)
 
 # --------------------------------------------------
 # C++
@@ -101,11 +101,11 @@ FetchContent_MakeAvailable(
 )
 
 # --------------------------------------------------
-# MediaPlane
+# WebPtt
 # --------------------------------------------------
 
 add_executable(
-    MediaPlane
+    WebPtt
     src/main.cpp
     src/Dsp/Gain.cpp
     src/Api/Utils.cpp
@@ -116,7 +116,7 @@ add_executable(
 )
 
 target_link_libraries(
-    MediaPlane
+    WebPtt
     PRIVATE
         project_options
         Boost::asio

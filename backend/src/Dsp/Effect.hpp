@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <span>
 
-namespace MediaPlane::Dsp {
+namespace WebPtt::Dsp {
 class Effect {
 public:
     Effect() = default;
@@ -15,4 +15,4 @@ public:
 
     virtual void apply(std::span<int16_t> pcm_samples) = 0;
 };
-} // namespace MediaPlane::Dsp
+} // namespace WebPtt::Dsp

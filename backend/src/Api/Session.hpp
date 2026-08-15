@@ -7,7 +7,7 @@
 #include "boost/beast/http/string_body_fwd.hpp"
 #include <boost/beast/core/flat_buffer.hpp>
 
-namespace MediaPlane::Api {
+namespace WebPtt::Api {
 class Session : public std::enable_shared_from_this<Session> {
 public:
     explicit Session(Tcp::socket socket, std::shared_ptr<AppRouter> router);
@@ -25,4 +25,4 @@ private:
     Http::response<Http::string_body> response_;
     std::shared_ptr<AppRouter> router_;
 };
-} // namespace MediaPlane::Api
+} // namespace WebPtt::Api

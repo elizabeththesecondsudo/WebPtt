@@ -6,7 +6,7 @@
 
 #include "Types.hpp"
 
-namespace MediaPlane::Api {
+namespace WebPtt::Api {
 
 using Handler = std::function<Http::response<Http::string_body>(const Http::request<Http::string_body>&)>;
 
@@ -36,4 +36,4 @@ private:
     std::unordered_map<ApiEndpoint, Handler, ApiEndpointHash> routes_;
 };
 
-} // namespace MediaPlane::Api
+} // namespace WebPtt::Api

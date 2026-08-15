@@ -1,7 +1,7 @@
 #include "AppRouter.hpp"
 #include "Utils.hpp"
 
-namespace MediaPlane::Api {
+namespace WebPtt::Api {
 void AppRouter::register_routes() {
     router_.add_route("/isAlive", Http::verb::get, [this](const Http::request<Http::string_body>& request) {
         return is_alive(request);
@@ -17,4 +17,4 @@ Http::response<Http::string_body> AppRouter::is_alive(const Http::request<Http::
     response.prepare_payload();
     return response;
 }
-} // namespace MediaPlane::Api
+} // namespace WebPtt::Api

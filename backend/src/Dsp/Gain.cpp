@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace MediaPlane::Dsp {
+namespace WebPtt::Dsp {
 namespace {
 constexpr int16_t kInt16Max = std::numeric_limits<int16_t>::max();
 constexpr int16_t kInt16Min = std::numeric_limits<int16_t>::min();
@@ -26,4 +26,4 @@ void Gain::apply(std::span<int16_t> pcm_samples) {
         sample = static_cast<int16_t>(clamped);
     }
 }
-} // namespace MediaPlane::Dsp
+} // namespace WebPtt::Dsp

@@ -6,7 +6,7 @@
 #include <boost/beast/http/write.hpp>
 #include <spdlog/spdlog.h>
 
-namespace MediaPlane::Api {
+namespace WebPtt::Api {
 Session::Session(Tcp::socket socket, std::shared_ptr<AppRouter> router)
     : socket_(std::move(socket))
     , remote_endpoint_(socket_.remote_endpoint())
@@ -62,4 +62,4 @@ void Session::do_write(Http::response<Http::string_body> response) {
         shutdown_error = self->socket_.shutdown(Tcp::socket::shutdown_send, shutdown_error);
     });
 }
-} // namespace MediaPlane::Api
+} // namespace WebPtt::Api

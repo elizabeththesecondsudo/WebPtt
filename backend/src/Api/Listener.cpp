@@ -3,7 +3,7 @@
 #include <memory>
 #include "Session.hpp"
 
-namespace MediaPlane::Api {
+namespace WebPtt::Api {
 Listener::Listener(Tcp::acceptor acceptor)
     : acceptor_(std::move(acceptor))
     , router_(std::make_shared<AppRouter>()) {
@@ -26,4 +26,4 @@ void Listener::listen() {
         listen(); // Continue accepting new connections
     });
 }
-} // namespace MediaPlane::Api
+} // namespace WebPtt::Api

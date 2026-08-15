@@ -3,7 +3,7 @@
 #include "AppRouter.hpp"
 #include "Types.hpp"
 
-namespace MediaPlane::Api {
+namespace WebPtt::Api {
 class Listener {
 public:
     explicit Listener(Tcp::acceptor acceptor);
@@ -14,4 +14,4 @@ private:
     Tcp::acceptor acceptor_;
     std::shared_ptr<AppRouter> router_;
 };
-} // namespace MediaPlane::Api
+} // namespace WebPtt::Api
