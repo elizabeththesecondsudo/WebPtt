@@ -1,3 +1,0 @@
-[submodule "backend/external/soundtouch"]
-	path = backend/external/soundtouch
-	url = https://codeberg.org/soundtouch/soundtouch.git
