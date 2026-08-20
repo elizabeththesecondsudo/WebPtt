@@ -14,10 +14,12 @@ int main() {
     }
 
     auto settings = std::move(settings_res.value());
-    const auto& frontend_context = settings.frontend_context_;
+    const auto& media_plane = settings.media_plane_;
 
-    auto acceptor_res =
-        WebPtt::Api::create_acceptor(io_context.get_executor(), frontend_context.address_, frontend_context.port_);
+    auto acceptor_res = WebPtt::Api::create_acceptor(
+        io_context.get_executor(),
+        media_plane.listening_address_,
+        media_plane.listening_port_);
 
     if (!acceptor_res) {
         spdlog::critical("Failed to open an acceptor: {}", acceptor_res.error());
