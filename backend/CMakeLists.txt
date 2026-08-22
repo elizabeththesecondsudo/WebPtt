@@ -20,6 +20,7 @@ configure_file(
 add_subdirectory(src/Api)
 add_subdirectory(src/Core)
 add_subdirectory(src/Utils)
+add_subdirectory(src/Stt)
 
 add_executable(
     WebPtt
@@ -32,6 +33,7 @@ target_link_libraries(
         project_options
         WebPttApi
         WebPttCore
+        WebPttStt
         WebPttUtils
         dr_wav_headers
 )
