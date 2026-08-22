@@ -1,6 +1,6 @@
 #include "Api/Listener.hpp"
-#include "Api/Utils.hpp"
 #include "Core/Settings.hpp"
+#include "Utils/Net.hpp"
 #include <spdlog/spdlog.h>
 #include <cstdlib>
 
@@ -14,9 +14,9 @@ int main() {
     }
 
     auto settings = std::move(settings_res.value());
-    const auto& media_plane = settings.media_plane_;
+    const auto& [media_plane, stt] = settings;
 
-    auto acceptor_res = WebPtt::Api::create_acceptor(
+    auto acceptor_res = WebPtt::Utils::create_acceptor(
         io_context.get_executor(),
         media_plane.listening_address_,
         media_plane.listening_port_);
@@ -28,6 +28,8 @@ int main() {
 
     WebPtt::Api::Listener listener(std::move(acceptor_res.value()));
     listener.listen();
+
     io_context.run();
-    return 0;
+
+    return EXIT_SUCCESS;
 }

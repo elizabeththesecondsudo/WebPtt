@@ -1,19 +1,18 @@
 add_library(
-    WebPttCore
+    WebPttUtils
     STATIC
-        Settings.cpp
+        Net.cpp
 )
 
 target_include_directories(
-    WebPttCore
+    WebPttUtils
     PUBLIC
         ${PROJECT_SOURCE_DIR}/src
 )
 
 target_link_libraries(
-    WebPttCore
+    WebPttUtils
     PUBLIC
         project_options
         Boost::asio
-        glaze::glaze
 )

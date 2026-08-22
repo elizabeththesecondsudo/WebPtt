@@ -11,7 +11,8 @@ struct MediaPlane {
 };
 
 struct Stt {
-    std::string model_path_;
+    std::string address_;
+    uint16_t port_;
 };
 
 struct Settings {
