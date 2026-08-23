@@ -3,8 +3,7 @@
 #include <memory>
 #include "AppRouter.hpp"
 #include "Core/Types.hpp"
-#include "boost/beast/http/message_fwd.hpp"
-#include "boost/beast/http/string_body_fwd.hpp"
+#include "Types.hpp"
 #include <boost/beast/core/flat_buffer.hpp>
 
 namespace WebPtt::Api {
