@@ -1,17 +1,9 @@
 #include "Settings.hpp"
 #include <expected>
-#include <glaze/core/reflect.hpp>
-#include <glaze/toml/read.hpp>
+#include "Utils/Toml.hpp"
 
 namespace WebPtt::Core {
 std::expected<Settings, std::string> load_settings(const std::string& filename) {
-    Settings settings;
-    std::string data;
-    auto errc = glz::read_file_toml(settings, filename, data);
-    if (errc) {
-        return std::unexpected(glz::format_error(errc, data));
-    }
-
-    return settings;
+    return Utils::parse_toml_file<Settings>(filename);
 }
 } // namespace WebPtt::Core
