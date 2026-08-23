@@ -1,6 +1,7 @@
 #include "Api/Listener.hpp"
-#include "Api/Utils.hpp"
 #include "Core/Settings.hpp"
+#include "Stt/Client.hpp"
+#include "Utils/Net.hpp"
 #include <spdlog/spdlog.h>
 #include <cstdlib>
 
@@ -14,18 +15,30 @@ int main() {
     }
 
     auto settings = std::move(settings_res.value());
-    const auto& frontend_context = settings.frontend_context_;
+    const auto& [media_plane, stt] = settings;
 
-    auto acceptor_res =
-        WebPtt::Api::create_acceptor(io_context.get_executor(), frontend_context.address_, frontend_context.port_);
+    auto acceptor_res = WebPtt::Utils::create_acceptor(
+        io_context.get_executor(),
+        media_plane.listening_address_,
+        media_plane.listening_port_);
 
     if (!acceptor_res) {
         spdlog::critical("Failed to open an acceptor: {}", acceptor_res.error());
         return EXIT_FAILURE;
     }
 
+    auto socket_res = WebPtt::Utils::create_socket(io_context.get_executor(), stt.address_, stt.port_);
+    if (!socket_res) {
+        spdlog::critical("Failed to open an socket: {}", socket_res.error());
+        return EXIT_FAILURE;
+    }
+
+    auto stt_client = std::make_shared<WebPtt::Stt::Client>(std::move(socket_res.value()));
+
     WebPtt::Api::Listener listener(std::move(acceptor_res.value()));
     listener.listen();
+
     io_context.run();
-    return 0;
+
+    return EXIT_SUCCESS;
 }

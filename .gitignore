@@ -37,6 +37,40 @@ backend/external/
 
 
 # ==================================================
+# Python
+# ==================================================
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python cache / compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyright/
+.coverage
+htmlcov/
+
+# Build / packaging
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Local configuration
+config.json
+
+# Local models
+models/
+
+
+# ==================================================
 # React / TypeScript / Node.js
 # ==================================================
 
@@ -87,8 +121,7 @@ pnpm-debug.log*
 # IDE / Editors
 # ==================================================
 
-# Keep .vscode/settings.json because it contains
-# project clangd/CMake configuration.
+# Keep project VS Code configuration.
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json

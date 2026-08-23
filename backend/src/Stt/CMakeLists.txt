@@ -1,19 +1,20 @@
 add_library(
-    WebPttCore
+    WebPttStt
     STATIC
-        Settings.cpp
+        Client.cpp
 )
 
 target_include_directories(
-    WebPttCore
+    WebPttStt
     PUBLIC
         ${PROJECT_SOURCE_DIR}/src
 )
 
 target_link_libraries(
-    WebPttCore
+    WebPttStt
     PUBLIC
         project_options
         Boost::asio
-        glaze::glaze
+        Boost::beast
+        WebPttUtils
 )
