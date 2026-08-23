@@ -1,9 +1,11 @@
 #include "Session.hpp"
+#include "WebSocketSession.hpp"
 
 #include <boost/asio/socket_base.hpp>
 #include <boost/beast/core/error.hpp>
 #include <boost/beast/http/read.hpp>
 #include <boost/beast/http/write.hpp>
+#include <boost/beast/websocket/rfc6455.hpp>
 #include <spdlog/spdlog.h>
 
 namespace WebPtt::Api {
@@ -36,6 +38,11 @@ void Session::do_read() {
 
             if (error) {
                 spdlog::error("Error reading HTTP request: {}", error.message());
+                return;
+            }
+
+            if (WebSocket::is_upgrade(self->request_)) {
+                std::make_shared<WebSocketSession>(std::move(self->socket_))->start(std::move(self->request_));
                 return;
             }
 

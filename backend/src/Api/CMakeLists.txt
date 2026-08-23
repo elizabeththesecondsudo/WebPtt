@@ -6,6 +6,7 @@ add_library(
         Router.cpp
         Session.cpp
         Utils.cpp
+        WebSocketSession.cpp
 )
 
 target_include_directories(
