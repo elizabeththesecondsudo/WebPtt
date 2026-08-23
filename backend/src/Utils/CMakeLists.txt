@@ -15,5 +15,6 @@ target_link_libraries(
     PUBLIC
         project_options
         Boost::asio
+        Boost::uuid
         glaze::glaze
 )
