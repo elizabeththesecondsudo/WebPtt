@@ -35,19 +35,19 @@ async def transcribe(request: Request):
         raise HTTPException(
             status_code=422,
             detail={
-                "error": str(error),
-                "raw_text": raw_text,
-                "processing_time_ms": round(transcription_time_ms, 2),
+                "error_": str(error),
+                "raw_text_": raw_text,
+                "processing_time_ms_": round(transcription_time_ms, 2),
             },
         ) from error
 
     return {
-        "raw_text": raw_text,
-        "command": command.type.value,
-        "value": command.value,
-        "processing_time_ms": round(transcription_time_ms, 2),
-        "audio_duration_ms": round(audio_duration_ms, 2),
-        "input_samples": input_samples,
-        "whisper_samples": int(pcm.size),
+        "raw_text_": raw_text,
+        "command_": command.type.value,
+        "value_": command.value,
+        "processing_time_ms_": round(transcription_time_ms, 2),
+        "audio_duration_ms_": round(audio_duration_ms, 2),
+        "input_samples_": input_samples,
+        "whisper_samples_": int(pcm.size),
     }
 

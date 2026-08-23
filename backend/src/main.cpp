@@ -28,7 +28,7 @@ int main() {
     }
 
     auto socket_res = WebPtt::Utils::create_socket(io_context.get_executor(), stt.address_, stt.port_);
-    if(!socket_res) {
+    if (!socket_res) {
         spdlog::critical("Failed to open an socket: {}", socket_res.error());
         return EXIT_FAILURE;
     }

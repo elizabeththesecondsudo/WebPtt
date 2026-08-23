@@ -16,10 +16,14 @@ struct TranscribeResponse {
     std::size_t whisper_samples_{};
 };
 
-struct TranscribeErrorResponse {
+struct TranscribeErrorResponseDetails {
     std::string error_;
     std::string raw_text_;
     double processing_time_ms_{};
+};
+
+struct TranscribeErrorResponse {
+    TranscribeErrorResponseDetails detail; //NOLINT
 };
 
 using TranscribeError = std::variant<std::string, TranscribeErrorResponse>;
