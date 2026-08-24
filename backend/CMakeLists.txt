@@ -17,10 +17,11 @@ configure_file(
     COPYONLY
 )
 
-add_subdirectory(src/Api)
 add_subdirectory(src/Core)
 add_subdirectory(src/Utils)
 add_subdirectory(src/Stt)
+add_subdirectory(src/WebRtc)
+add_subdirectory(src/Api)
 
 add_executable(
     WebPtt
