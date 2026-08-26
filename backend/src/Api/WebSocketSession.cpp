@@ -20,7 +20,9 @@ void WebSocketSession::start(
     Http::request<Http::string_body> request,
     std::string peer_id,
     ConnectedCallback on_connected,
+    MessageCallback on_message,
     DisconnectCallback on_disconnected) {
+    on_message_ = std::move(on_message);
     on_disconnected_ = std::move(on_disconnected);
     peer_id_ = std::move(peer_id);
     auto request_ptr = std::make_shared<Http::request<Http::string_body>>(std::move(request));
@@ -89,6 +91,10 @@ void WebSocketSession::do_read() {
             self->remote_endpoint_.address().to_string(),
             self->remote_endpoint_.port());
         self->buffer_.consume(self->buffer_.size());
+
+        if (self->on_message_) {
+            self->on_message_(self, std::move(message));
+        }
 
         self->do_read();
     });

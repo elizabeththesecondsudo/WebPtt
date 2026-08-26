@@ -4,8 +4,6 @@
 #include "Types.hpp"
 
 #include <memory>
-#include <string>
-#include <unordered_map>
 
 namespace WebPtt::Api {
 class WebSocketManager;
@@ -14,7 +12,8 @@ class WebSocketSession;
 
 namespace WebPtt::WebRtc {
 class PeerConnectionManager;
-}
+class Session;
+} // namespace WebPtt::WebRtc
 
 namespace WebPtt::Core {
 class Coordinator {
@@ -26,6 +25,13 @@ public:
     void attatch(Tcp::socket socket, Api::Http::request<Api::Http::string_body> request);
 
 private:
+    static void configure_peer_connection(
+        const std::shared_ptr<WebRtc::Session>& peer_session,
+        const std::shared_ptr<Api::WebSocketSession>& websocket_session);
+    void start_websocket_session(
+        const std::shared_ptr<WebRtc::Session>& peer_session,
+        const std::shared_ptr<Api::WebSocketSession>& websocket_session,
+        Api::Http::request<Api::Http::string_body> request);
     void detach(const std::shared_ptr<Api::WebSocketSession>& session);
 
     std::shared_ptr<Api::WebSocketManager> websocket_manager_;
