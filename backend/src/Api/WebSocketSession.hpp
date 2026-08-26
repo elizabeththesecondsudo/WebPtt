@@ -2,7 +2,6 @@
 
 #include "Types.hpp"
 #include "Core/Types.hpp"
-#include "WebRtc/Session.hpp"
 
 #include <boost/beast/core/flat_buffer.hpp>
 #include <deque>
@@ -25,6 +24,5 @@ private:
     boost::beast::flat_buffer buffer_;
     std::deque<std::string> write_queue_;
     bool is_writing_{};
-    std::shared_ptr<WebRtc::Session> webrtc_session_;
 };
 } // namespace WebPtt::Api

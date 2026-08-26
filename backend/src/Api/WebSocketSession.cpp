@@ -1,8 +1,4 @@
 #include "WebSocketSession.hpp"
-
-#include "Messages.hpp"
-#include "Utils/Json.hpp"
-
 #include <boost/beast/core/buffers_to_string.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <spdlog/spdlog.h>
@@ -25,20 +21,7 @@ void WebSocketSession::start(Http::request<Http::string_body> request) {
             "Upgraded connection from {}:{} to WebSocket",
             self->remote_endpoint_.address().to_string(),
             self->remote_endpoint_.port());
-            
-        self->webrtc_session_ = std::make_shared<WebRtc::Session>();
 
-        auto message = Utils::serialize_json(
-            SessionCreatedMessage{
-                .session_id_ = self->webrtc_session_->id(),
-            });
-
-        if (!message) {
-            spdlog::error("Failed to serialize session creation message: {}", message.error());
-            return;
-        }
-
-        self->write(std::move(message.value()));
         self->do_read();
     });
 }
