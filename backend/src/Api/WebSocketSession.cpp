@@ -16,32 +16,43 @@ WebSocketSession::WebSocketSession(Tcp::socket socket)
     : stream_(std::move(socket))
     , remote_endpoint_(stream_.next_layer().remote_endpoint()) {}
 
-void WebSocketSession::start(Http::request<Http::string_body> request, DisconnectCallback on_disconnected) {
+void WebSocketSession::start(
+    Http::request<Http::string_body> request,
+    std::string peer_id,
+    ConnectedCallback on_connected,
+    DisconnectCallback on_disconnected) {
     on_disconnected_ = std::move(on_disconnected);
+    peer_id_ = std::move(peer_id);
     auto request_ptr = std::make_shared<Http::request<Http::string_body>>(std::move(request));
-    stream_.async_accept(*request_ptr, [self = shared_from_this(), request_ptr](boost::system::error_code error) {
-        if (is_websocket_closed(error)) {
+    stream_.async_accept(
+        *request_ptr,
+        [self = shared_from_this(), request_ptr, on_connected = std::move(on_connected)](
+            boost::system::error_code error) {
+            if (is_websocket_closed(error)) {
+                spdlog::info(
+                    "WebSocket client {}:{} closed during handshake",
+                    self->remote_endpoint_.address().to_string(),
+                    self->remote_endpoint_.port());
+                self->disconnect();
+                return;
+            }
+
+            if (error) {
+                spdlog::error("Error accepting WebSocket connection: {}", error.message());
+                self->disconnect();
+                return;
+            }
+
             spdlog::info(
-                "WebSocket client {}:{} closed during handshake",
+                "Upgraded connection from {}:{} to WebSocket",
                 self->remote_endpoint_.address().to_string(),
                 self->remote_endpoint_.port());
-            self->disconnect();
-            return;
-        }
 
-        if (error) {
-            spdlog::error("Error accepting WebSocket connection: {}", error.message());
-            self->disconnect();
-            return;
-        }
-
-        spdlog::info(
-            "Upgraded connection from {}:{} to WebSocket",
-            self->remote_endpoint_.address().to_string(),
-            self->remote_endpoint_.port());
-
-        self->do_read();
-    });
+            if (on_connected) {
+                on_connected(self);
+            }
+            self->do_read();
+        });
 }
 
 void WebSocketSession::write(std::string message) {

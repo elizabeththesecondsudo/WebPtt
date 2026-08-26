@@ -3,6 +3,7 @@
 #include "Core/Coordinator.hpp"
 #include "Core/Settings.hpp"
 #include "Utils/Net.hpp"
+#include "WebRtc/PeerConnectionManager.hpp"
 #include <spdlog/spdlog.h>
 #include <cstdlib>
 
@@ -29,7 +30,9 @@ int main() {
     }
 
     auto websocket_manager = std::make_shared<WebPtt::Api::WebSocketManager>();
-    auto coordinator = std::make_shared<WebPtt::Core::Coordinator>(websocket_manager);
+    auto peer_connection_manager = std::make_shared<WebPtt::WebRtc::PeerConnectionManager>();
+    auto coordinator =
+        std::make_shared<WebPtt::Core::Coordinator>(websocket_manager, peer_connection_manager);
 
     WebPtt::Api::Listener listener(
         std::move(acceptor_res.value()),
