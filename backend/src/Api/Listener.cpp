@@ -4,10 +4,13 @@
 #include "Session.hpp"
 
 namespace WebPtt::Api {
-Listener::Listener(Tcp::acceptor acceptor)
+Listener::Listener(Tcp::acceptor acceptor, WebSocketUpgradeCallback on_websocket_upgrade)
     : acceptor_(std::move(acceptor))
-    , router_(std::make_shared<AppRouter>()) {
+    , router_(std::make_shared<AppRouter>())
+    , on_websocket_upgrade_(std::move(on_websocket_upgrade)) {
     router_->register_routes();
+    const auto endpoint = acceptor_.local_endpoint();
+    spdlog::info("API listener initialized on {}:{}", endpoint.address().to_string(), endpoint.port());
 }
 
 void Listener::listen() {
@@ -22,7 +25,7 @@ void Listener::listen() {
             socket.remote_endpoint().address().to_string(),
             socket.remote_endpoint().port());
 
-        std::make_shared<Session>(std::move(socket), router_)->start();
+        std::make_shared<Session>(std::move(socket), router_)->start(on_websocket_upgrade_);
         listen(); // Continue accepting new connections
     });
 }

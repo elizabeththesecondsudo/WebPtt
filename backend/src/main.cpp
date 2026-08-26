@@ -1,6 +1,7 @@
 #include "Api/Listener.hpp"
+#include "Api/WebSocketManager.hpp"
+#include "Core/Coordinator.hpp"
 #include "Core/Settings.hpp"
-#include "Stt/Client.hpp"
 #include "Utils/Net.hpp"
 #include <spdlog/spdlog.h>
 #include <cstdlib>
@@ -27,15 +28,14 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    // auto socket_res = WebPtt::Utils::create_socket(io_context.get_executor(), stt.address_, stt.port_);
-    // if (!socket_res) {
-    //     spdlog::critical("Failed to open an socket: {}", socket_res.error());
-    //     return EXIT_FAILURE;
-    // }
+    auto websocket_manager = std::make_shared<WebPtt::Api::WebSocketManager>();
+    auto coordinator = std::make_shared<WebPtt::Core::Coordinator>(websocket_manager);
 
-    // auto stt_client = std::make_shared<WebPtt::Stt::Client>(std::move(socket_res.value()));
-
-    WebPtt::Api::Listener listener(std::move(acceptor_res.value()));
+    WebPtt::Api::Listener listener(
+        std::move(acceptor_res.value()),
+        [coordinator](WebPtt::Tcp::socket socket, WebPtt::Api::Http::request<WebPtt::Api::Http::string_body> request) {
+            coordinator->attatch(std::move(socket), std::move(request));
+        });
     listener.listen();
 
     io_context.run();

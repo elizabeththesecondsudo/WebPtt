@@ -1,12 +1,14 @@
 add_library(
     WebPttApi
     STATIC
+        ../Core/Coordinator.cpp
         AppRouter.cpp
         Listener.cpp
         Router.cpp
         Session.cpp
         Utils.cpp
         WebSocketSession.cpp
+        WebSocketManager.cpp
 )
 
 target_include_directories(
