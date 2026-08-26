@@ -26,5 +26,4 @@ target_link_libraries(
         glaze::glaze
         Threads::Threads
         spdlog::spdlog
-        WebPttWebRtc
 )
