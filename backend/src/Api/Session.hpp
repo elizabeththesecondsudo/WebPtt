@@ -10,8 +10,7 @@
 namespace WebPtt::Api {
 class Session : public std::enable_shared_from_this<Session> {
 public:
-    using WebSocketUpgradeCallback =
-        std::function<void(Tcp::socket, Http::request<Http::string_body>)>;
+    using WebSocketUpgradeCallback = std::function<void(Tcp::socket, Http::request<Http::string_body>)>;
 
     Session(Tcp::socket socket, std::shared_ptr<AppRouter> router);
 

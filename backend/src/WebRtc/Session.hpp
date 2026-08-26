@@ -16,9 +16,7 @@ public:
     Session();
 
     [[nodiscard]] const std::string& id() const noexcept;
-    void configure(
-        LocalDescriptionCallback on_local_description,
-        LocalCandidateCallback on_local_candidate);
+    void configure(LocalDescriptionCallback on_local_description, LocalCandidateCallback on_local_candidate);
     [[nodiscard]] std::expected<void, std::string> set_remote_description(
         const std::string& sdp,
         const std::string& type);
