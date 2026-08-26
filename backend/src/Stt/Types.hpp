@@ -23,7 +23,7 @@ struct TranscribeErrorResponseDetails {
 };
 
 struct TranscribeErrorResponse {
-    TranscribeErrorResponseDetails detail; //NOLINT
+    TranscribeErrorResponseDetails detail; // NOLINT
 };
 
 using TranscribeError = std::variant<std::string, TranscribeErrorResponse>;

@@ -31,8 +31,7 @@ int main() {
 
     auto websocket_manager = std::make_shared<WebPtt::Api::WebSocketManager>();
     auto peer_connection_manager = std::make_shared<WebPtt::WebRtc::PeerConnectionManager>();
-    auto coordinator =
-        std::make_shared<WebPtt::Core::Coordinator>(websocket_manager, peer_connection_manager);
+    auto coordinator = std::make_shared<WebPtt::Core::Coordinator>(websocket_manager, peer_connection_manager);
 
     WebPtt::Api::Listener listener(
         std::move(acceptor_res.value()),

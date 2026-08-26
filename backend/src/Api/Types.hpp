@@ -6,4 +6,4 @@
 namespace WebPtt::Api {
 namespace Http = boost::beast::http;
 namespace WebSocket = boost::beast::websocket;
-}
+} // namespace WebPtt::Api

@@ -23,7 +23,7 @@ struct ApiEndpointHash {
 
         const auto method_hash = std::hash<unsigned>{}(static_cast<unsigned>(endpoint.method_));
 
-        return target_hash ^ (method_hash << 1); //NOLINT
+        return target_hash ^ (method_hash << 1); // NOLINT
     }
 };
 

@@ -14,8 +14,7 @@ class WebSocketSession : public std::enable_shared_from_this<WebSocketSession> {
 public:
     using ConnectedCallback = std::function<void(const std::shared_ptr<WebSocketSession>&)>;
     using DisconnectCallback = std::function<void(const std::shared_ptr<WebSocketSession>&)>;
-    using MessageCallback =
-        std::function<void(const std::shared_ptr<WebSocketSession>&, std::string)>;
+    using MessageCallback = std::function<void(const std::shared_ptr<WebSocketSession>&, std::string)>;
 
     explicit WebSocketSession(Tcp::socket socket);
 
