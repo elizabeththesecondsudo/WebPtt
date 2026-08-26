@@ -5,13 +5,17 @@
 #include "Core/Types.hpp"
 #include "Types.hpp"
 #include <boost/beast/core/flat_buffer.hpp>
+#include <functional>
 
 namespace WebPtt::Api {
 class Session : public std::enable_shared_from_this<Session> {
 public:
-    explicit Session(Tcp::socket socket, std::shared_ptr<AppRouter> router);
+    using WebSocketUpgradeCallback =
+        std::function<void(Tcp::socket, Http::request<Http::string_body>)>;
 
-    void start();
+    Session(Tcp::socket socket, std::shared_ptr<AppRouter> router);
+
+    void start(WebSocketUpgradeCallback on_websocket_upgrade);
 
 private:
     void do_read();
@@ -23,5 +27,6 @@ private:
     Http::request<Http::string_body> request_;
     Http::response<Http::string_body> response_;
     std::shared_ptr<AppRouter> router_;
+    WebSocketUpgradeCallback on_websocket_upgrade_;
 };
 } // namespace WebPtt::Api
