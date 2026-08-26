@@ -3,9 +3,6 @@
 #include <boost/asio/error.hpp>
 #include <boost/asio/socket_base.hpp>
 #include <boost/beast/core/error.hpp>
-#include <boost/beast/http/read.hpp>
-#include <boost/beast/http/write.hpp>
-#include <boost/beast/websocket/rfc6455.hpp>
 #include <spdlog/spdlog.h>
 
 namespace {
