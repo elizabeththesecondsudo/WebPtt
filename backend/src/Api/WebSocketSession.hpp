@@ -2,6 +2,7 @@
 
 #include "Types.hpp"
 #include "Core/Types.hpp"
+#include "boost/asio/any_io_executor.hpp"
 
 #include <boost/beast/core/flat_buffer.hpp>
 #include <deque>
@@ -11,12 +12,23 @@
 namespace WebPtt::Api {
 class WebSocketSession : public std::enable_shared_from_this<WebSocketSession> {
 public:
+    using ConnectedCallback = std::function<void(const std::shared_ptr<WebSocketSession>&)>;
     using DisconnectCallback = std::function<void(const std::shared_ptr<WebSocketSession>&)>;
+    using MessageCallback =
+        std::function<void(const std::shared_ptr<WebSocketSession>&, std::string)>;
 
     explicit WebSocketSession(Tcp::socket socket);
 
-    void start(Http::request<Http::string_body> request, DisconnectCallback on_disconnected);
+    void start(
+        Http::request<Http::string_body> request,
+        std::string peer_id,
+        ConnectedCallback on_connected,
+        MessageCallback on_message,
+        DisconnectCallback on_disconnected);
     void write(std::string message);
+
+    [[nodiscard]] const std::string& id() const noexcept { return peer_id_; }
+    [[nodiscard]] boost::asio::any_io_executor executor() noexcept { return stream_.get_executor(); }
 
 private:
     void disconnect();
@@ -29,6 +41,8 @@ private:
     std::deque<std::string> write_queue_;
     bool is_writing_{};
     bool is_disconnected_{};
+    MessageCallback on_message_;
     DisconnectCallback on_disconnected_;
+    std::string peer_id_;
 };
 } // namespace WebPtt::Api
