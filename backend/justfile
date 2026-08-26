@@ -1,0 +1,9 @@
+set shell := ["bash", "-cu"]
+
+# List all available recipes when running `just` without arguments.
+default:
+    @just --list
+
+# Format all tracked C and C++ source files.
+format:
+    git ls-files -z -- '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hh' '*.hpp' '*.hxx' | xargs -0 -r clang-format --style=file -i
