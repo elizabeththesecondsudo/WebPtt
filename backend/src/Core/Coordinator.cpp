@@ -39,12 +39,11 @@ void Coordinator::configure_peer_connection(
     auto weak_websocket_session = std::weak_ptr<Api::WebSocketSession>(websocket_session);
     auto weak_peer_session = std::weak_ptr<WebRtc::Session>(peer_session);
 
-    peer_session->on_audio(
-        [weak_peer_session](rtc::binary opus_frame, std::uint32_t) {
-            if (auto session = weak_peer_session.lock()) {
-                static_cast<void>(session->send_audio(std::move(opus_frame)));
-            }
-        });
+    peer_session->on_audio([weak_peer_session](rtc::binary opus_frame, std::uint32_t) {
+        if (auto session = weak_peer_session.lock()) {
+            static_cast<void>(session->send_audio(std::move(opus_frame)));
+        }
+    });
 
     peer_session->configure(
         [weak_websocket_session](const rtc::Description& description) {

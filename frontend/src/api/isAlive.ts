@@ -1,10 +1,9 @@
-import { apiClient } from './client'
+import { apiClient } from "./client";
 
 export async function fetchIsAlive(): Promise<boolean> {
-  const response = await apiClient.get<string>('/isAlive', {
-    responseType: 'text',
-  })
+  const response = await apiClient.get<string>("/isAlive", {
+    responseType: "text",
+  });
 
-  return response.status === 200
+  return response.status === 200;
 }
-
