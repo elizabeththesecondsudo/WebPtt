@@ -37,7 +37,8 @@ int main() {
         std::move(acceptor_res.value()),
         [coordinator](WebPtt::Tcp::socket socket, WebPtt::Api::Http::request<WebPtt::Api::Http::string_body> request) {
             coordinator->attatch(std::move(socket), std::move(request));
-        });
+        },
+        peer_connection_manager);
     listener.listen();
 
     io_context.run();

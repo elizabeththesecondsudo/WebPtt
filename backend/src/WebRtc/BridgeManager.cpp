@@ -1,0 +1,49 @@
+#include "BridgeManager.hpp"
+
+#include "Bridge.hpp"
+#include "PeerConnectionManager.hpp"
+
+namespace WebPtt::WebRtc {
+BridgeManager::BridgeManager(std::shared_ptr<PeerConnectionManager> peer_connection_manager)
+    : peer_connection_manager_(std::move(peer_connection_manager)) {}
+
+std::expected<std::shared_ptr<Bridge>, BridgeError> BridgeManager::create_bridge(
+    std::string_view session_id,
+    std::string_view target_session_id) {
+    if (session_id.empty() || target_session_id.empty() || session_id == target_session_id) {
+        return std::unexpected(BridgeError{
+            .code_ = BridgeErrorCode::invalid_request,
+            .message_ = "session_id and target_session_id must identify two different sessions",
+        });
+    }
+
+    const auto session = peer_connection_manager_->find_session(session_id);
+    const auto target = peer_connection_manager_->find_session(target_session_id);
+    if (!session || !target) {
+        return std::unexpected(BridgeError{
+            .code_ = BridgeErrorCode::session_not_found,
+            .message_ = !session ? "session_id was not found" : "target_session_id was not found",
+        });
+    }
+
+    std::scoped_lock lock(mutex_);
+    for (const auto id : {session_id, target_session_id}) {
+        auto existing = bridges_by_session_.find(std::string(id));
+        if (existing != bridges_by_session_.end() && existing->second->active()) {
+            return std::unexpected(BridgeError{
+                .code_ = BridgeErrorCode::session_busy,
+                .message_ = "one of the sessions is already connected to a bridge",
+            });
+        }
+        if (existing != bridges_by_session_.end()) {
+            bridges_by_session_.erase(existing);
+        }
+    }
+
+    auto bridge = std::make_shared<Bridge>(session, target);
+    bridge->connect();
+    bridges_by_session_.emplace(std::string(session_id), bridge);
+    bridges_by_session_.emplace(std::string(target_session_id), bridge);
+    return bridge;
+}
+} // namespace WebPtt::WebRtc
