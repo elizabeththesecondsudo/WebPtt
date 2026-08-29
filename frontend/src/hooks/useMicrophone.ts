@@ -7,6 +7,7 @@ export function useMicrophone() {
   const [error, setError] = useState<string | null>(null);
 
   const stop = useCallback(() => {
+    console.info("[Microphone] stopping capture");
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
     setStream(null);
@@ -19,6 +20,7 @@ export function useMicrophone() {
     setError(null);
 
     try {
+      console.info("[Microphone] requesting audio permission");
       const microphoneStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           autoGainControl: true,
@@ -29,6 +31,10 @@ export function useMicrophone() {
       });
 
       const audioTrack = microphoneStream.getAudioTracks()[0];
+      console.info("[Microphone] capture started", {
+        trackId: audioTrack?.id,
+        settings: audioTrack?.getSettings(),
+      });
       audioTrack?.addEventListener(
         "ended",
         () => {
@@ -41,6 +47,7 @@ export function useMicrophone() {
       streamRef.current = microphoneStream;
       setStream(microphoneStream);
     } catch (cause) {
+      console.error("[Microphone] failed to start capture", cause);
       setError(
         cause instanceof DOMException && cause.name === "NotAllowedError"
           ? "Microphone permission was denied."

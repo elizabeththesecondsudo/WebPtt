@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cstddef>
 #include <exception>
+#include <memory>
 #include <random>
 #include <spdlog/spdlog.h>
 #include <utility>
@@ -40,6 +41,16 @@ void Session::create_audio_track() {
     audio.addSSRC(ssrc, id_, id_, "audio");
 
     audio_track_ = peer_connection_->addTrack(audio);
+    spdlog::info(
+        "Peer {} created audio track: mid={}, local_ssrc={}, payload_type={}",
+        id_,
+        kAudioMid,
+        ssrc,
+        kOpusPayloadType);
+
+    const auto session_id = id_;
+    audio_track_->onOpen([session_id]() { spdlog::info("Peer {} audio track opened", session_id); });
+    audio_track_->onClosed([session_id]() { spdlog::info("Peer {} audio track closed", session_id); });
 
     auto rtp_config = std::make_shared<rtc::RtpPacketizationConfig>(ssrc, id_, kOpusPayloadType, kOpusSampleRate);
     auto packetizer = std::make_shared<rtc::OpusRtpPacketizer>(rtp_config);
@@ -62,15 +73,22 @@ bool Session::send_audio(rtc::binary opus_frame) {
 }
 
 void Session::on_audio(AudioReceiveCallback callback) {
+    const auto session_id = id_;
+    auto received_packets = std::make_shared<std::atomic<std::uint64_t>>(0);
     audio_track_->onMessage(
-        [callback = std::move(callback)](rtc::binary packet) {
+        [callback = std::move(callback), received_packets, session_id](rtc::binary packet) {
             if (!callback || packet.size() < sizeof(rtc::RtpHeader) || rtc::IsRtcp(packet)) {
                 return;
             }
 
-            spdlog::info("Got {} bytes", packet.size());
             const auto* rtp = reinterpret_cast<const rtc::RtpHeader*>(packet.data());
             if (rtp->version() != 2 || rtp->payloadType() != kOpusPayloadType) {
+                spdlog::warn(
+                    "Peer {} dropped RTP: version={}, payload_type={}, expected_payload_type={}",
+                    session_id,
+                    rtp->version(),
+                    rtp->payloadType(),
+                    kOpusPayloadType);
                 return;
             }
 
@@ -103,6 +121,17 @@ void Session::on_audio(AudioReceiveCallback callback) {
             rtc::binary opus_frame(
                 packet.begin() + static_cast<std::ptrdiff_t>(payload_offset),
                 packet.begin() + static_cast<std::ptrdiff_t>(payload_end));
+            const auto count = received_packets->fetch_add(1, std::memory_order_relaxed) + 1;
+            if (count == 1 || count % 250 == 0) {
+                spdlog::info(
+                    "Peer {} received audio RTP: packets={}, ssrc={}, sequence={}, timestamp={}, opus_bytes={}",
+                    session_id,
+                    count,
+                    rtp->ssrc(),
+                    rtp->seqNumber(),
+                    rtp->timestamp(),
+                    opus_frame.size());
+            }
             callback(std::move(opus_frame), rtp->timestamp());
         },
         nullptr);
@@ -137,15 +166,19 @@ void Session::configure(LocalDescriptionCallback on_local_description, LocalCand
 
 std::expected<void, std::string> Session::set_remote_description(const std::string& sdp, const std::string& type) {
     try {
+        spdlog::info("Peer {} applying remote {} SDP ({} bytes):\n{}", id_, type, sdp.size(), sdp);
         peer_connection_->setRemoteDescription(rtc::Description(sdp, type));
+        spdlog::info("Peer {} applied remote {} SDP successfully", id_, type);
         return {};
     } catch (const std::exception& error) {
+        spdlog::error("Peer {} rejected remote {} SDP: {}", id_, type, error.what());
         return std::unexpected(error.what());
     }
 }
 
 std::expected<void, std::string> Session::add_remote_candidate(std::string candidate, std::string mid) {
     try {
+        spdlog::info("Peer {} adding remote ICE candidate for mid {}: {}", id_, mid, candidate);
         peer_connection_->addRemoteCandidate(rtc::Candidate(std::move(candidate), std::move(mid)));
         return {};
     } catch (const std::exception& error) {

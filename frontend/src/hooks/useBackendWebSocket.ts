@@ -30,9 +30,11 @@ export function useBackendWebSocket() {
       setStatus("connecting");
       pendingMessagesRef.current = [];
       const socket = new WebSocket(config.websocketUrl);
+      console.info("[WebSocket] connecting to", config.websocketUrl);
       socketRef.current = socket;
 
       socket.addEventListener("open", () => {
+        console.info("[WebSocket] connected");
         if (active) setStatus("connected");
       });
 
@@ -44,6 +46,8 @@ export function useBackendWebSocket() {
             JSON.parse(event.data),
           );
           if (!message.success) return;
+
+          console.info("[WebSocket] received message:", message.data.type_);
 
           setLastMessage(message.data);
           if (messageListenersRef.current.size === 0) {
@@ -62,10 +66,16 @@ export function useBackendWebSocket() {
       });
 
       socket.addEventListener("error", () => {
+        console.error("[WebSocket] connection error");
         if (active) setStatus("error");
       });
 
       socket.addEventListener("close", () => {
+        console.info(
+          "[WebSocket] disconnected; reconnecting in",
+          reconnectDelayMs,
+          "ms",
+        );
         if (!active) return;
 
         socketRef.current = null;
@@ -87,8 +97,15 @@ export function useBackendWebSocket() {
   }, []);
 
   const send = useCallback((message: WebSocketMessage) => {
-    if (socketRef.current?.readyState !== WebSocket.OPEN) return false;
+    if (socketRef.current?.readyState !== WebSocket.OPEN) {
+      console.warn(
+        "[WebSocket] cannot send while disconnected:",
+        message.type_,
+      );
+      return false;
+    }
 
+    console.info("[WebSocket] sending message:", message.type_);
     socketRef.current.send(JSON.stringify(message));
     return true;
   }, []);

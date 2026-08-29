@@ -32,6 +32,7 @@ export function usePeerConnection({
     if (websocketStatus !== "connected") return;
 
     const peer = new RTCPeerConnection({ iceServers: [] });
+    console.info("[WebRTC] creating peer connection");
     const remoteAudio = new MediaStream();
     // Negotiate a sender SSRC in the first offer. libdatachannel routes RTP by
     // the SSRC advertised in SDP, while replaceTrack intentionally does not
@@ -56,10 +57,25 @@ export function usePeerConnection({
     signalingChainRef.current = Promise.resolve();
 
     peer.addEventListener("connectionstatechange", () => {
+      console.info("[WebRTC] connection state:", peer.connectionState);
       setStatus(peer.connectionState as PeerConnectionStatus);
     });
 
+    peer.addEventListener("iceconnectionstatechange", () => {
+      console.info("[WebRTC] ICE connection state:", peer.iceConnectionState);
+    });
+
+    peer.addEventListener("signalingstatechange", () => {
+      console.info("[WebRTC] signaling state:", peer.signalingState);
+    });
+
     peer.addEventListener("track", (event) => {
+      console.info("[WebRTC] received remote track", {
+        kind: event.track.kind,
+        id: event.track.id,
+        muted: event.track.muted,
+        streams: event.streams.map((stream) => stream.id),
+      });
       event.streams[0]?.getAudioTracks().forEach((track) => {
         if (!remoteAudio.getTrackById(track.id)) remoteAudio.addTrack(track);
       });
@@ -71,7 +87,15 @@ export function usePeerConnection({
     });
 
     peer.addEventListener("icecandidate", (event) => {
-      if (!event.candidate) return;
+      if (!event.candidate) {
+        console.info("[WebRTC] ICE gathering complete");
+        return;
+      }
+
+      console.info("[WebRTC] sending ICE candidate", {
+        mid: event.candidate.sdpMid,
+        candidate: event.candidate.candidate,
+      });
 
       sendSignal({
         type_: "candidate",
@@ -87,13 +111,20 @@ export function usePeerConnection({
           const offer = await peer.createOffer();
           await peer.setLocalDescription(offer);
           if (peer.localDescription?.type === "offer") {
+            console.info(
+              "[WebRTC] sending offer SDP:\n",
+              peer.localDescription.sdp,
+            );
             sendSignal({
               type_: "offer",
               sdp_: peer.localDescription.sdp,
             });
           }
         })
-        .catch(() => setStatus("failed"));
+        .catch((error) => {
+          console.error("[WebRTC] negotiation failed", error);
+          setStatus("failed");
+        });
     };
     peer.addEventListener("negotiationneeded", negotiate);
 
@@ -103,6 +134,7 @@ export function usePeerConnection({
     };
 
     const unsubscribe = subscribeToSignals((message) => {
+      console.info("[WebRTC] received signaling message:", message.type_);
       signalingChainRef.current = signalingChainRef.current
         .then(async () => {
           if (message.type_ === "session_created") return;
@@ -116,9 +148,13 @@ export function usePeerConnection({
               sdpMid: message.sdp_mid_,
             };
             if (!peer.remoteDescription) {
+              console.info(
+                "[WebRTC] queueing remote ICE candidate until SDP is set",
+              );
               pendingCandidatesRef.current.push(candidate);
               return;
             }
+            console.info("[WebRTC] adding remote ICE candidate", candidate);
             await peer.addIceCandidate(candidate);
             return;
           }
@@ -134,6 +170,10 @@ export function usePeerConnection({
             type: message.type_,
             sdp: message.sdp_,
           });
+          console.info(
+            `[WebRTC] applied remote ${message.type_} SDP:\n`,
+            message.sdp_,
+          );
           await applyPendingCandidates();
 
           if (message.type_ === "offer") {
@@ -147,10 +187,18 @@ export function usePeerConnection({
             }
           }
         })
-        .catch(() => setStatus("failed"));
+        .catch((error) => {
+          console.error(
+            "[WebRTC] failed to apply signaling message",
+            message,
+            error,
+          );
+          setStatus("failed");
+        });
     });
 
     return () => {
+      console.info("[WebRTC] closing peer connection");
       unsubscribe();
       peerRef.current = null;
       audioSenderRef.current = null;
@@ -172,7 +220,21 @@ export function usePeerConnection({
     const microphoneTrack =
       microphoneStream?.getAudioTracks()[0] ?? placeholderTrackRef.current;
     if (!microphoneTrack) return;
-    void sender.replaceTrack(microphoneTrack).catch(() => setStatus("failed"));
+    console.info("[WebRTC] replacing outgoing audio track", {
+      source: microphoneStream ? "microphone" : "silent-placeholder",
+      id: microphoneTrack.id,
+      enabled: microphoneTrack.enabled,
+      muted: microphoneTrack.muted,
+      readyState: microphoneTrack.readyState,
+      settings: microphoneTrack.getSettings(),
+    });
+    void sender.replaceTrack(microphoneTrack).then(
+      () => console.info("[WebRTC] outgoing audio track replaced successfully"),
+      (error) => {
+        console.error("[WebRTC] replaceTrack failed", error);
+        setStatus("failed");
+      },
+    );
   }, [microphoneStream]);
 
   return { status, remoteStream };
