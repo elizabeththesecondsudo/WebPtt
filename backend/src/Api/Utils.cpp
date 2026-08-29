@@ -7,6 +7,7 @@ Http::response<Http::string_body> make_basic_api_response(
     Http::response<Http::string_body> response{status, request.version()};
     response.set(Http::field::server, "WebPtt");
     response.set(Http::field::content_type, "application/json");
+    response.set(Http::field::access_control_allow_origin, "*");
     response.keep_alive(request.keep_alive());
     return response;
 }
