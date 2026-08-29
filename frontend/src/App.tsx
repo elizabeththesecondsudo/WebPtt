@@ -132,7 +132,11 @@ function App() {
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Phone aria-hidden="true" className="size-4" />
-            {isCalling ? "Connecting call…" : bridgeId ? "Call connected" : "Start call"}
+            {isCalling
+              ? "Connecting call…"
+              : bridgeId
+                ? "Call connected"
+                : "Start call"}
           </button>
           <p
             className={`text-center text-xs ${callError ? "text-rose-400" : "text-slate-400"}`}

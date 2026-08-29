@@ -7,9 +7,7 @@ const createSessionResponseSchema = z.object({
   target_session_id_: z.string(),
 });
 
-export type CreateSessionResponse = z.infer<
-  typeof createSessionResponseSchema
->;
+export type CreateSessionResponse = z.infer<typeof createSessionResponseSchema>;
 
 export async function createSession(
   sessionId: string,

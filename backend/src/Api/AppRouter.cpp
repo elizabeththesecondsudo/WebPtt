@@ -42,10 +42,9 @@ Http::response<Http::string_body> AppRouter::create_session(const Http::request<
 
     const auto bridge = bridge_manager_.create_bridge(parsed->session_id_, parsed->target_session_id_);
     if (!bridge) {
-        const auto status = bridge.error().code_ == WebRtc::BridgeErrorCode::session_not_found
-            ? Http::status::not_found
-            : bridge.error().code_ == WebRtc::BridgeErrorCode::session_busy ? Http::status::conflict
-                                                                            : Http::status::bad_request;
+        const auto status = bridge.error().code_ == WebRtc::BridgeErrorCode::session_not_found ? Http::status::not_found
+                            : bridge.error().code_ == WebRtc::BridgeErrorCode::session_busy    ? Http::status::conflict
+                                                                                            : Http::status::bad_request;
         auto response = make_basic_api_response(request, status);
         response.body() = Utils::serialize_json(ErrorResponse{.error_ = bridge.error().message_}).value_or("{}");
         response.prepare_payload();
@@ -53,11 +52,13 @@ Http::response<Http::string_body> AppRouter::create_session(const Http::request<
     }
 
     auto response = make_basic_api_response(request, Http::status::created);
-    response.body() = Utils::serialize_json(CreateSessionResponse{
-        .bridge_id_ = (*bridge)->id(),
-        .session_id_ = parsed->session_id_,
-        .target_session_id_ = parsed->target_session_id_,
-    }).value_or("{}");
+    response.body() = Utils::serialize_json(
+                          CreateSessionResponse{
+                              .bridge_id_ = (*bridge)->id(),
+                              .session_id_ = parsed->session_id_,
+                              .target_session_id_ = parsed->target_session_id_,
+                          })
+                          .value_or("{}");
     response.prepare_payload();
     return response;
 }

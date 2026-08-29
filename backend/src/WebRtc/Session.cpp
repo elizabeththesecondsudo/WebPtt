@@ -150,12 +150,14 @@ void Session::configure(LocalDescriptionCallback on_local_description, LocalCand
 
     peer_connection_->onStateChange([session_id](rtc::PeerConnection::State state) {
         spdlog::info(
-            "Peer {} connection state changed to {} ({})", session_id, state_name(state), static_cast<int>(state));
+            "Peer {} connection state changed to {} ({})",
+            session_id,
+            state_name(state),
+            static_cast<int>(state));
     });
 
     peer_connection_->onIceStateChange([session_id](rtc::PeerConnection::IceState state) {
-        spdlog::info(
-            "Peer {} ICE state changed to {} ({})", session_id, state_name(state), static_cast<int>(state));
+        spdlog::info("Peer {} ICE state changed to {} ({})", session_id, state_name(state), static_cast<int>(state));
     });
 
     peer_connection_->onGatheringStateChange([session_id](rtc::PeerConnection::GatheringState state) {
