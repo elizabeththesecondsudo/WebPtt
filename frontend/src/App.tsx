@@ -1,12 +1,27 @@
+import { useEffect, useRef } from 'react'
 import { Mic, MicOff } from 'lucide-react'
 import { useIsAlive } from './hooks/useIsAlive'
 import { useBackendWebSocket } from './hooks/useBackendWebSocket'
 import { useMicrophone } from './hooks/useMicrophone'
+import { usePeerConnection } from './hooks/usePeerConnection'
 
 function App() {
-  const { data: isAlive, isPending } = useIsAlive()
+  const { data: isAlive, isPending, isError } = useIsAlive()
   const websocket = useBackendWebSocket()
   const microphone = useMicrophone()
+  const remoteAudioRef = useRef<HTMLAudioElement>(null)
+  const peer = usePeerConnection({
+    microphoneStream: microphone.stream,
+    websocketStatus: websocket.status,
+    sendSignal: websocket.send,
+    subscribeToSignals: websocket.subscribe,
+  })
+
+  useEffect(() => {
+    if (remoteAudioRef.current) {
+      remoteAudioRef.current.srcObject = peer.remoteStream
+    }
+  }, [peer.remoteStream])
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950 p-6 text-slate-100">
@@ -20,7 +35,11 @@ function App() {
           <div className="flex items-center justify-between p-4">
             <dt className="text-sm text-slate-400">HTTP API</dt>
             <dd className="text-sm font-medium">
-              {isPending ? 'Checking…' : isAlive ? 'Connected' : 'Disconnected'}
+              {isPending
+                ? 'Checking…'
+                : !isError && isAlive
+                  ? 'Connected'
+                  : 'Disconnected'}
             </dd>
           </div>
           <div className="flex items-center justify-between p-4">
@@ -33,7 +52,13 @@ function App() {
               {websocket.sessionId ?? 'Waiting for backend…'}
             </dd>
           </div>
+          <div className="flex items-center justify-between p-4">
+            <dt className="text-sm text-slate-400">WebRTC audio</dt>
+            <dd className="text-sm font-medium capitalize">{peer.status}</dd>
+          </div>
         </dl>
+
+        <audio ref={remoteAudioRef} autoPlay playsInline />
 
         <div className="space-y-3 border-t border-slate-800 pt-5">
           <button

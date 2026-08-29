@@ -15,6 +15,10 @@ const reconnectDelayMs = 5_000
 
 export function useBackendWebSocket() {
   const socketRef = useRef<WebSocket | null>(null)
+  const messageListenersRef = useRef(
+    new Set<(message: WebSocketMessage) => void>(),
+  )
+  const pendingMessagesRef = useRef<WebSocketMessage[]>([])
   const [status, setStatus] = useState<WebSocketStatus>('connecting')
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null)
@@ -27,6 +31,7 @@ export function useBackendWebSocket() {
       if (!active) return
 
       setStatus('connecting')
+      pendingMessagesRef.current = []
       const socket = new WebSocket(config.websocketUrl)
       socketRef.current = socket
 
@@ -42,6 +47,11 @@ export function useBackendWebSocket() {
           if (!message.success) return
 
           setLastMessage(message.data)
+          if (messageListenersRef.current.size === 0) {
+            pendingMessagesRef.current.push(message.data)
+          } else {
+            messageListenersRef.current.forEach((listener) => listener(message.data))
+          }
           if (message.data.type_ === 'session_created') {
             setSessionId(message.data.session_id_)
           }
@@ -82,5 +92,14 @@ export function useBackendWebSocket() {
     return true
   }, [])
 
-  return { status, sessionId, lastMessage, send }
+  const subscribe = useCallback(
+    (listener: (message: WebSocketMessage) => void) => {
+      messageListenersRef.current.add(listener)
+      pendingMessagesRef.current.splice(0).forEach(listener)
+      return () => messageListenersRef.current.delete(listener)
+    },
+    [],
+  )
+
+  return { status, sessionId, lastMessage, send, subscribe }
 }
