@@ -1,9 +1,12 @@
+import { Mic, MicOff } from 'lucide-react'
 import { useIsAlive } from './hooks/useIsAlive'
 import { useBackendWebSocket } from './hooks/useBackendWebSocket'
+import { useMicrophone } from './hooks/useMicrophone'
 
 function App() {
   const { data: isAlive, isPending } = useIsAlive()
   const websocket = useBackendWebSocket()
+  const microphone = useMicrophone()
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950 p-6 text-slate-100">
@@ -31,6 +34,37 @@ function App() {
             </dd>
           </div>
         </dl>
+
+        <div className="space-y-3 border-t border-slate-800 pt-5">
+          <button
+            type="button"
+            disabled={microphone.isStarting}
+            onClick={microphone.isCapturing ? microphone.stop : microphone.start}
+            className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition disabled:cursor-wait disabled:opacity-60 ${
+              microphone.isCapturing
+                ? 'bg-rose-500 text-white hover:bg-rose-400'
+                : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400'
+            }`}
+          >
+            {microphone.isCapturing ? (
+              <MicOff aria-hidden="true" className="size-4" />
+            ) : (
+              <Mic aria-hidden="true" className="size-4" />
+            )}
+            {microphone.isStarting
+              ? 'Requesting microphone…'
+              : microphone.isCapturing
+                ? 'Stop microphone'
+                : 'Start microphone'}
+          </button>
+
+          <p className="text-center text-xs text-slate-400" role="status">
+            {microphone.error ??
+              (microphone.isCapturing
+                ? 'Microphone audio is being captured.'
+                : 'Microphone access starts only when you press the button.')}
+          </p>
+        </div>
       </section>
     </main>
   )
