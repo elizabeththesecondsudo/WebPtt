@@ -2,7 +2,7 @@ include_guard(GLOBAL)
 
 set(NO_EXAMPLES ON CACHE BOOL "Disable libdatachannel examples" FORCE)
 set(NO_TESTS ON CACHE BOOL "Disable libdatachannel tests" FORCE)
-set(NO_MEDIA ON CACHE BOOL "Disable libdatachannel media support" FORCE)
+set(NO_MEDIA OFF CACHE BOOL "Enable libdatachannel media support" FORCE)
 set(NO_WEBSOCKET OFF CACHE BOOL "Enable libdatachannel WebSocket support" FORCE)
 
 FetchContent_Declare(

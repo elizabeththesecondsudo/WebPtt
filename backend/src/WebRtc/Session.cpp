@@ -54,12 +54,4 @@ std::expected<void, std::string> Session::add_remote_candidate(std::string candi
         return std::unexpected(error.what());
     }
 }
-
-std::shared_ptr<rtc::DataChannel> Session::create_data_channel(std::string label) {
-    return peer_connection_->createDataChannel(std::move(label));
-}
-
-void Session::on_data_channel(std::function<void(std::shared_ptr<rtc::DataChannel>)> callback) {
-    peer_connection_->onDataChannel(std::move(callback));
-}
 } // namespace WebPtt::WebRtc
