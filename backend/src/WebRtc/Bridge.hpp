@@ -11,6 +11,7 @@ public:
     Bridge(std::shared_ptr<Session> first, std::shared_ptr<Session> second);
 
     void connect();
+    void disconnect();
     [[nodiscard]] const std::string& id() const noexcept;
     [[nodiscard]] bool active() const noexcept;
 

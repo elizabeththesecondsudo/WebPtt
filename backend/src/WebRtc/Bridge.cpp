@@ -9,8 +9,9 @@
 namespace WebPtt::WebRtc {
 Bridge::Bridge(std::shared_ptr<Session> first, std::shared_ptr<Session> second)
     : id_(Utils::generate_uuid())
-    , first_(std::move(first))
-    , second_(std::move(second)) {}
+    , first_(first)
+    , second_(second) {}
+
 
 void Bridge::connect() {
     const auto first = first_.lock();
@@ -31,6 +32,23 @@ void Bridge::connect() {
     });
 
     spdlog::info("Created bridge {} between peers {} and {}", id_, first->id(), second->id());
+}
+
+void Bridge::disconnect() {
+    if (first_.expired() && second_.expired()) {
+        return;
+    }
+
+    if (const auto first = first_.lock()) {
+        first->on_audio({});
+    }
+    if (const auto second = second_.lock()) {
+        second->on_audio({});
+    }
+
+    first_.reset();
+    second_.reset();
+    spdlog::info("Disconnected bridge {}", id_);
 }
 
 const std::string& Bridge::id() const noexcept {

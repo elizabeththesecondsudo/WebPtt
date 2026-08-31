@@ -2,7 +2,6 @@
 
 #include <expected>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -18,6 +17,5 @@ public:
 
 private:
     std::unordered_map<std::string, std::shared_ptr<Session>> sessions_;
-    mutable std::mutex mutex_;
 };
 } // namespace WebPtt::WebRtc
