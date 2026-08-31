@@ -23,6 +23,17 @@ struct DeleteSessionRequest {
     std::string bridge_id_;
 };
 
+struct SessionStatusRequest {
+    std::string session_id_;
+};
+
+struct SessionStatusResponse {
+    bool active_{};
+    std::string bridge_id_;
+    std::string source_session_id_;
+    std::string target_session_id_;
+};
+
 struct ErrorResponse {
     std::string error_;
 };

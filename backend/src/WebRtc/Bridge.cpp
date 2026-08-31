@@ -55,6 +55,16 @@ const std::string& Bridge::id() const noexcept {
     return id_;
 }
 
+std::string Bridge::source_id() const {
+    const auto source = first_.lock();
+    return source ? source->id() : std::string{};
+}
+
+std::string Bridge::target_id() const {
+    const auto target = second_.lock();
+    return target ? target->id() : std::string{};
+}
+
 bool Bridge::active() const noexcept {
     return !first_.expired() && !second_.expired();
 }

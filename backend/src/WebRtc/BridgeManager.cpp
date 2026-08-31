@@ -52,9 +52,9 @@ std::expected<std::shared_ptr<Bridge>, BridgeError> BridgeManager::create_bridge
 }
 
 bool BridgeManager::remove_bridge(std::string_view bridge_id) {
-    const auto matching = std::ranges::find_if(
-        bridges_by_session_,
-        [bridge_id](const auto& entry) { return entry.second->id() == bridge_id; });
+    const auto matching = std::ranges::find_if(bridges_by_session_, [bridge_id](const auto& entry) {
+        return entry.second->id() == bridge_id;
+    });
     if (matching == bridges_by_session_.end()) {
         return false;
     }
@@ -63,5 +63,13 @@ bool BridgeManager::remove_bridge(std::string_view bridge_id) {
     bridge->disconnect();
     std::erase_if(bridges_by_session_, [&bridge](const auto& entry) { return entry.second == bridge; });
     return true;
+}
+
+std::shared_ptr<Bridge> BridgeManager::find_bridge(std::string_view session_id) const {
+    const auto matching = bridges_by_session_.find(std::string(session_id));
+    if (matching == bridges_by_session_.end() || !matching->second->active()) {
+        return nullptr;
+    }
+    return matching->second;
 }
 } // namespace WebPtt::WebRtc

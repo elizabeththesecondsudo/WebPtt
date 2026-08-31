@@ -13,6 +13,8 @@ public:
     void connect();
     void disconnect();
     [[nodiscard]] const std::string& id() const noexcept;
+    [[nodiscard]] std::string source_id() const;
+    [[nodiscard]] std::string target_id() const;
     [[nodiscard]] bool active() const noexcept;
 
 private:
