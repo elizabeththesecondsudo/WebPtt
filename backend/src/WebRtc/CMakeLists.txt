@@ -1,6 +1,8 @@
 add_library(
     WebPttWebRtc
     STATIC
+        Bridge.cpp
+        BridgeManager.cpp
         PeerConnectionManager.cpp
         Session.cpp
 )
