@@ -10,6 +10,7 @@ import {
   Radio,
 } from "lucide-react";
 import axios from "axios";
+import { toast } from "react-toastify";
 import { createSession } from "./api/createSession";
 import { deleteSession } from "./api/deleteSession";
 import { useIsAlive } from "./hooks/useIsAlive";
@@ -28,7 +29,6 @@ function App() {
   const hasSeenActiveBridgeRef = useRef(false);
   const [targetSessionId, setTargetSessionId] = useState("");
   const [bridgeId, setBridgeId] = useState<string | null>(null);
-  const [callError, setCallError] = useState<string | null>(null);
   const [isCalling, setIsCalling] = useState(false);
   const [isHangingUp, setIsHangingUp] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -70,22 +70,26 @@ function App() {
     if (isIncomingCall) stopMicrophone();
   }, [isIncomingCall, stopMicrophone]);
 
+  useEffect(() => {
+    if (microphone.error) toast.error(microphone.error);
+  }, [microphone.error]);
+
   const startCall = async () => {
     const sessionId = websocket.sessionId;
     const targetId = targetSessionId.trim();
     if (!sessionId || !targetId || sessionId === targetId) return;
 
     setIsCalling(true);
-    setCallError(null);
     try {
       const bridge = await createSession(sessionId, targetId);
       setBridgeId(bridge.bridge_id_);
+      toast.success("Call connected");
     } catch (error) {
       setBridgeId(null);
       if (axios.isAxiosError<{ error_?: string }>(error)) {
-        setCallError(error.response?.data?.error_ ?? error.message);
+        toast.error(error.response?.data?.error_ ?? error.message);
       } else {
-        setCallError(error instanceof Error ? error.message : "Call failed");
+        toast.error(error instanceof Error ? error.message : "Call failed");
       }
     } finally {
       setIsCalling(false);
@@ -96,16 +100,18 @@ function App() {
     if (!activeBridgeId) return;
 
     setIsHangingUp(true);
-    setCallError(null);
     try {
       await deleteSession(activeBridgeId);
       setBridgeId(null);
       microphone.stop();
+      toast.success("Call ended");
     } catch (error) {
       if (axios.isAxiosError<{ error_?: string }>(error)) {
-        setCallError(error.response?.data?.error_ ?? error.message);
+        toast.error(error.response?.data?.error_ ?? error.message);
       } else {
-        setCallError(error instanceof Error ? error.message : "Hang up failed");
+        toast.error(
+          error instanceof Error ? error.message : "Hang up failed",
+        );
       }
     } finally {
       setIsHangingUp(false);
@@ -122,9 +128,14 @@ function App() {
 
   const copySessionId = async () => {
     if (!websocket.sessionId) return;
-    await navigator.clipboard.writeText(websocket.sessionId);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1_500);
+    try {
+      await navigator.clipboard.writeText(websocket.sessionId);
+      setCopied(true);
+      toast.success("Session ID copied");
+      window.setTimeout(() => setCopied(false), 1_500);
+    } catch {
+      toast.error("Could not copy the session ID");
+    }
   };
 
   const callStatus = activeBridgeId
@@ -255,7 +266,6 @@ function App() {
               disabled={Boolean(activeBridgeId)}
               onChange={(event) => {
                 setTargetSessionId(event.target.value);
-                setCallError(null);
               }}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && canCall) void startCall();
@@ -290,16 +300,12 @@ function App() {
                   ? "Connecting call…"
                   : "Start call"}
           </button>
-          <p
-            className={`text-center text-xs ${callError ? "text-rose-400" : "text-[#949ba4]"}`}
-            role="status"
-          >
-            {callError ??
-              (activeBridgeId
-                ? isIncomingCall
-                  ? "You are the destination. Only you can hear the source audio."
-                  : "The destination is connected and can hear this session."
-                : "Audio is routed only to the session you select.")}
+          <p className="text-center text-xs text-[#949ba4]">
+            {activeBridgeId
+              ? isIncomingCall
+                ? "You are the destination. Only you can hear the source audio."
+                : "The destination is connected and can hear this session."
+              : "Audio is routed only to the session you select."}
           </p>
 
           <div className="flex items-center justify-between rounded-xl bg-[#232428] p-3">
@@ -308,14 +314,13 @@ function App() {
                 {isIncomingCall ? "Listening mode" : "Microphone"}
               </p>
               <p
-                className={`truncate text-xs ${microphone.error ? "text-rose-400" : "text-[#949ba4]"}`}
+                className="truncate text-xs text-[#949ba4]"
               >
                 {isIncomingCall
                   ? "Source-only audio — your microphone is off"
-                  : (microphone.error ??
-                    (microphone.isCapturing
-                      ? "Live — destination can hear you"
-                      : "Muted"))}
+                  : microphone.isCapturing
+                    ? "Live — destination can hear you"
+                    : "Muted"}
               </p>
             </div>
             <button
