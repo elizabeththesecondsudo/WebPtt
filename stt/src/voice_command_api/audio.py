@@ -16,4 +16,3 @@ def convert_pcm_for_whisper(raw_pcm: bytes) -> np.ndarray:
 
     pcm_16khz = soxr.resample(pcm_48khz, INPUT_SAMPLE_RATE, WHISPER_SAMPLE_RATE, quality="HQ")
     return pcm_16khz.astype(np.float32, copy=False)
-

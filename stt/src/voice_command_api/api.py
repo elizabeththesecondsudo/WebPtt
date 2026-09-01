@@ -50,4 +50,3 @@ async def transcribe(request: Request):
         "input_samples_": input_samples,
         "whisper_samples_": int(pcm.size),
     }
-

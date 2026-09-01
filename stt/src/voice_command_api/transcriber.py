@@ -26,4 +26,3 @@ class Transcriber:
             initial_prompt=INITIAL_PROMPT,
         )
         return "".join(segment.text for segment in segments).strip()
-

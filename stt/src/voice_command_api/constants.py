@@ -8,4 +8,3 @@ INITIAL_PROMPT = (
     "Voice commands: pitchshift <number>, tempo <number>, gain <number>, mix <file name>. "
     "Available mix files: " + ", ".join(MIX_FILES) + "."
 )
-
