@@ -1,4 +1,8 @@
-set shell := ["bash", "-cu"]
+set shell := ["bash", "-c"]
+
+# List all available recipes when running `just` without arguments.
+default:
+    @just --list
 
 # Configure Debug, then start STT, the C++ backend, and the React development server.
 run-dev-all:
