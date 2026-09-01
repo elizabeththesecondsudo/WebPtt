@@ -4,6 +4,12 @@ set shell := ["bash", "-c"]
 default:
     @just --list
 
+# Format the C++, Python, and React components.
+format:
+    cd backend && git ls-files -z -- '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hh' '*.hpp' '*.hxx' | xargs -0 -r clang-format --style=file -i
+    cd stt && .venv/bin/python -m ruff format .
+    cd frontend && npm run format
+
 # Configure Debug, then start STT, the C++ backend, and the React development server.
 run-dev-all:
     #!/usr/bin/env bash
