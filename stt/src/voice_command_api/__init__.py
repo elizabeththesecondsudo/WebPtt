@@ -1,2 +1,1 @@
 """Voice command transcription API."""
-

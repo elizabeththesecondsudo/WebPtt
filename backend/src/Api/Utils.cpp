@@ -12,10 +12,8 @@ Http::response<Http::string_body> make_basic_api_response(
     return response;
 }
 
-Http::response<Http::string_body> make_error_response(
-    const Http::request<Http::string_body>& request,
-    Http::status status,
-    std::string message) {
+Http::response<Http::string_body>
+make_error_response(const Http::request<Http::string_body>& request, Http::status status, std::string message) {
     return make_json_response(request, status, ErrorResponse{.error_ = std::move(message)});
 }
 

@@ -5,9 +5,18 @@ from enum import Enum
 from voice_command_api.constants import COMMAND_NAMES, MIX_FILES
 
 NUMBER_WORDS = {
-    "zero": 0.0, "one": 1.0, "two": 2.0, "three": 3.0, "four": 4.0,
-    "for": 4.0, "five": 5.0, "six": 6.0, "seven": 7.0, "eight": 8.0,
-    "nine": 9.0, "ten": 10.0,
+    "zero": 0.0,
+    "one": 1.0,
+    "two": 2.0,
+    "three": 3.0,
+    "four": 4.0,
+    "for": 4.0,
+    "five": 5.0,
+    "six": 6.0,
+    "seven": 7.0,
+    "eight": 8.0,
+    "nine": 9.0,
+    "ten": 10.0,
 }
 
 
@@ -66,4 +75,3 @@ def parse_command(text: str) -> Command:
     if command_name == CommandType.MIX.value:
         return Command(CommandType.MIX, _closest_match(value, MIX_FILES, "mix file"))
     return Command(CommandType(command_name), parse_number(value))
-

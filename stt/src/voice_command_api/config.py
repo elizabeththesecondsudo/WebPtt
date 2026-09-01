@@ -22,9 +22,7 @@ def load_settings(config_path: Path = CONFIG_PATH) -> Settings:
         host = config["server"]["host"]
         port = config["server"]["port"]
     except (KeyError, TypeError) as error:
-        raise ValueError(
-            "config.json must define 'model.path', 'server.host', and 'server.port'"
-        ) from error
+        raise ValueError("config.json must define 'model.path', 'server.host', and 'server.port'") from error
 
     if not isinstance(host, str) or not host:
         raise ValueError("server.host must be a non-empty string")
