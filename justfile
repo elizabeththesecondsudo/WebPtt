@@ -4,6 +4,11 @@ set shell := ["bash", "-c"]
 default:
     @just --list
 
+# Install the frontend and STT dependencies.
+install:
+    cd frontend && npm ci
+    cd stt && .venv/bin/python -m pip install -e .
+
 # Format the C++, Python, and React components.
 format:
     cd backend && git ls-files -z -- '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hh' '*.hpp' '*.hxx' | xargs -0 -r clang-format --style=file -i
