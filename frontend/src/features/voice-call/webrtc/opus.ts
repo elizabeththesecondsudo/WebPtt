@@ -10,7 +10,9 @@ const OPUS_FMTP = [
 ].join(";");
 
 export function configureOpusSdp(sdp: string) {
-  const opusPayloadType = sdp.match(/^a=rtpmap:(\d+) opus\/48000(?:\/\d+)?\r?$/im)?.[1];
+  const opusPayloadType = sdp.match(
+    /^a=rtpmap:(\d+) opus\/48000(?:\/\d+)?\r?$/im,
+  )?.[1];
   if (!opusPayloadType) return sdp;
 
   const fmtpPattern = new RegExp(`^a=fmtp:${opusPayloadType} .*$`, "im");
