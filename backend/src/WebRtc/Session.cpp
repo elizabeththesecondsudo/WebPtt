@@ -15,6 +15,8 @@ namespace {
 constexpr std::uint8_t kOpusPayloadType = 111;
 constexpr std::uint32_t kOpusSampleRate = 48'000;
 constexpr auto kAudioMid = "0";
+constexpr auto kOpusProfile =
+    "minptime=20;maxaveragebitrate=64000;stereo=0;sprop-stereo=0;useinbandfec=1;usedtx=0;cbr=1";
 
 rtc::SSRC make_ssrc() {
     // An SSRC only needs to be unique within an RTP session. Give every peer
@@ -36,7 +38,9 @@ void Session::create_audio_track() {
     // Chromium assigns MID "0" to its first transceiver. libdatachannel uses
     // the MID to associate the remote m-line with this pre-created track.
     rtc::Description::Audio audio(kAudioMid, rtc::Description::Direction::SendRecv);
-    audio.addOpusCodec(kOpusPayloadType);
+    // Ask the browser encoder for mono, constant-bitrate Opus without DTX so
+    // silent frames retain the same pacing and approximately the same size.
+    audio.addOpusCodec(kOpusPayloadType, kOpusProfile);
     audio.addAttribute("ptime:20");
     audio.addAttribute("maxptime:20");
     audio.addSSRC(ssrc, id_, id_, "audio");
@@ -123,16 +127,14 @@ void Session::on_audio(AudioReceiveCallback callback) {
                 packet.begin() + static_cast<std::ptrdiff_t>(payload_offset),
                 packet.begin() + static_cast<std::ptrdiff_t>(payload_end));
             const auto count = received_packets->fetch_add(1, std::memory_order_relaxed) + 1;
-            if (count == 1 || count % 250 == 0) {
-                spdlog::info(
-                    "Peer {} received audio RTP: packets={}, ssrc={}, sequence={}, timestamp={}, opus_bytes={}",
-                    session_id,
-                    count,
-                    rtp->ssrc(),
-                    rtp->seqNumber(),
-                    rtp->timestamp(),
-                    opus_frame.size());
-            }
+            spdlog::info(
+                "Peer {} received audio RTP: packets={}, ssrc={}, sequence={}, timestamp={}, opus_bytes={}",
+                session_id,
+                count,
+                rtp->ssrc(),
+                rtp->seqNumber(),
+                rtp->timestamp(),
+                opus_frame.size());
             callback(std::move(opus_frame), rtp->timestamp());
         },
         nullptr);
