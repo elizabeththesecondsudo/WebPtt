@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { registerPeerEvents } from "./webrtc/peerEvents";
 import { connectSignaling } from "./webrtc/signaling";
 import { createSilentAudio } from "./webrtc/silentAudio";
+import { configureOpusSender } from "./webrtc/opus";
 import type {
   PeerConnectionStatus,
   SendSignal,
@@ -43,6 +44,9 @@ export function usePeerConnection({
     });
     audioSenderRef.current = transceiver.sender;
     placeholderTrackRef.current = silentAudio.track;
+    void configureOpusSender(transceiver.sender).catch((error) =>
+      console.warn("[WebRTC] failed to configure Opus bitrate", error),
+    );
 
     registerPeerEvents({
       peer,

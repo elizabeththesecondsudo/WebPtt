@@ -3,6 +3,7 @@ import type {
   SendSignal,
   SubscribeToSignals,
 } from "./types";
+import { configureOpusSdp } from "./opus";
 
 type SignalingOptions = {
   peer: RTCPeerConnection;
@@ -30,7 +31,10 @@ export function connectSignaling({
       .then(async () => {
         if (peer.signalingState !== "stable") return;
         const offer = await peer.createOffer();
-        await peer.setLocalDescription(offer);
+        await peer.setLocalDescription({
+          type: offer.type,
+          sdp: configureOpusSdp(offer.sdp ?? ""),
+        });
         if (peer.localDescription?.type === "offer") {
           sendSignal({ type_: "offer", sdp_: peer.localDescription.sdp });
         }
@@ -73,7 +77,10 @@ export function connectSignaling({
         }
         if (message.type_ === "offer") {
           const answer = await peer.createAnswer();
-          await peer.setLocalDescription(answer);
+          await peer.setLocalDescription({
+            type: answer.type,
+            sdp: configureOpusSdp(answer.sdp ?? ""),
+          });
           if (peer.localDescription?.type === "answer") {
             sendSignal({ type_: "answer", sdp_: peer.localDescription.sdp });
           }
