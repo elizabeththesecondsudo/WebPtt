@@ -1,12 +1,13 @@
 #pragma once
 
-#include <opus.h>
-
 #include <array>
 #include <cstddef>
 #include <expected>
 #include <span>
 #include <string>
+
+struct OpusDecoder;
+struct OpusEncoder;
 
 namespace WebPtt::Audio {
 class OpusTranscoder {

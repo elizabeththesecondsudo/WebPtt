@@ -1,6 +1,8 @@
 #include "Session.hpp"
 #include "utils.hpp"
 
+#include <RtpCpp/RtpPacket.hpp>
+
 #include "Utils/Uuid.hpp"
 #include <chrono>
 #include <cstddef>
@@ -26,9 +28,10 @@ rtc::SSRC make_ssrc() {
 }
 } // namespace
 
-Session::Session()
+Session::Session(std::optional<Audio::OpusTranscoder> opus_transcoder)
     : id_(Utils::generate_uuid())
-    , peer_connection_(std::make_shared<rtc::PeerConnection>(rtc::Configuration{})) {
+    , peer_connection_(std::make_shared<rtc::PeerConnection>(rtc::Configuration{}))
+    , opus_transcoder_(std::move(opus_transcoder)) {
     create_audio_track();
 }
 
@@ -86,56 +89,44 @@ void Session::on_audio(AudioReceiveCallback callback) {
                 return;
             }
 
-            const auto* rtp = reinterpret_cast<const rtc::RtpHeader*>(packet.data());
-            if (rtp->version() != 2 || rtp->payloadType() != kOpusPayloadType) {
+            RtpCpp::RtpPacketView rtp;
+            
+            auto packet_view =
+                std::span<std::uint8_t>(reinterpret_cast<uint8_t*>(packet.data()), packet.size()); // NOLINT
+
+            const auto result = rtp.parse(packet_view);
+
+            if (result != RtpCpp::Result::kSuccess) {
                 spdlog::warn(
-                    "Peer {} dropped RTP: version={}, payload_type={}, expected_payload_type={}",
+                    "Peer {} dropped invalid RTP packet: {}",
                     session_id,
-                    rtp->version(),
-                    rtp->payloadType(),
+                    RtpCpp::make_error_code(result).message());
+                return;
+            }
+
+            const auto& header = rtp.get_header();
+            if (header.payload_type_ != kOpusPayloadType) {
+                spdlog::warn(
+                    "Peer {} dropped RTP: payload_type={}, expected_payload_type={}",
+                    session_id,
+                    header.payload_type_,
                     kOpusPayloadType);
                 return;
             }
 
-            std::size_t payload_offset = sizeof(rtc::RtpHeader) + (rtp->csrcCount() * sizeof(rtc::SSRC));
-            if (payload_offset > packet.size()) {
-                return;
-            }
-
-            if (rtp->extension()) {
-                if (packet.size() - payload_offset < sizeof(rtc::RtpExtensionHeader)) {
-                    return;
-                }
-                const auto* extension =
-                    reinterpret_cast<const rtc::RtpExtensionHeader*>(packet.data() + payload_offset);
-                payload_offset += sizeof(rtc::RtpExtensionHeader) + extension->getSize();
-                if (payload_offset > packet.size()) {
-                    return;
-                }
-            }
-
-            std::size_t payload_end = packet.size();
-            if (rtp->padding()) {
-                const auto padding_size = std::to_integer<std::uint8_t>(packet.back());
-                if (padding_size == 0 || padding_size > payload_end - payload_offset) {
-                    return;
-                }
-                payload_end -= padding_size;
-            }
-
-            rtc::binary opus_frame(
-                packet.begin() + static_cast<std::ptrdiff_t>(payload_offset),
-                packet.begin() + static_cast<std::ptrdiff_t>(payload_end));
+            const auto payload = rtp.payload();
+            const auto* payload_begin = reinterpret_cast<const std::byte*>(payload.data());
+            rtc::binary opus_frame(payload_begin, payload_begin + payload.size());
             const auto count = received_packets->fetch_add(1, std::memory_order_relaxed) + 1;
             spdlog::info(
                 "Peer {} received audio RTP: packets={}, ssrc={}, sequence={}, timestamp={}, opus_bytes={}",
                 session_id,
                 count,
-                rtp->ssrc(),
-                rtp->seqNumber(),
-                rtp->timestamp(),
+                header.ssrc_,
+                header.sequence_number_,
+                header.timestamp_,
                 opus_frame.size());
-            callback(std::move(opus_frame), rtp->timestamp());
+            callback(std::move(opus_frame), header.timestamp_);
         },
         nullptr);
 }
