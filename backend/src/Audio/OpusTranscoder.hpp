@@ -1,7 +1,7 @@
 #pragma once
 
 #include <array>
-#include <cstddef>
+#include <cstdint>
 #include <expected>
 #include <span>
 #include <string>
@@ -18,7 +18,7 @@ public:
     static constexpr auto kPacketSize = 160;
 
     using PcmFrame = std::array<float, kSamplesPerFrame>;
-    using OpusPacket = std::array<std::byte, kPacketSize>;
+    using OpusPacket = std::array<std::uint8_t, kPacketSize>;
 
     [[nodiscard]] static std::expected<OpusTranscoder, std::string> make();
 
@@ -31,7 +31,7 @@ public:
 
     [[nodiscard]] std::expected<OpusPacket, std::string> encode(std::span<const float> pcm);
 
-    [[nodiscard]] std::expected<PcmFrame, std::string> decode(std::span<const std::byte> opus_packet);
+    [[nodiscard]] std::expected<PcmFrame, std::string> decode(std::span<const std::uint8_t> opus_packet);
 
 private:
     OpusTranscoder(OpusEncoder* encoder, OpusDecoder* decoder) noexcept;

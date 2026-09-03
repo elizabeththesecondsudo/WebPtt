@@ -67,7 +67,7 @@ std::expected<OpusTranscoder::OpusPacket, std::string> OpusTranscoder::encode(co
         encoder_,
         pcm.data(),
         static_cast<int>(kSamplesPerFrame),
-        reinterpret_cast<unsigned char*>(packet.data()),
+        packet.data(),
         static_cast<opus_int32>(packet.size()));
 
     if (encoded_size < 0) {
@@ -82,7 +82,7 @@ std::expected<OpusTranscoder::OpusPacket, std::string> OpusTranscoder::encode(co
 }
 
 std::expected<OpusTranscoder::PcmFrame, std::string> OpusTranscoder::decode(
-    const std::span<const std::byte> opus_packet) {
+    const std::span<const std::uint8_t> opus_packet) {
     if (opus_packet.size() != kPacketSize) {
         return std::unexpected("Opus packet must contain exactly 160 bytes");
     }
@@ -90,7 +90,7 @@ std::expected<OpusTranscoder::PcmFrame, std::string> OpusTranscoder::decode(
     PcmFrame pcm{};
     const auto decoded_samples = opus_decode_float(
         decoder_,
-        reinterpret_cast<const unsigned char*>(opus_packet.data()),
+        opus_packet.data(),
         static_cast<opus_int32>(opus_packet.size()),
         pcm.data(),
         static_cast<int>(kSamplesPerFrame),
