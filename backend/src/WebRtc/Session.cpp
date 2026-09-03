@@ -1,4 +1,5 @@
 #include "Session.hpp"
+#include "rtc/rtp.hpp"
 #include "utils.hpp"
 
 #include <RtpCpp/RtpPacket.hpp>
@@ -81,26 +82,20 @@ bool Session::send_audio(rtc::binary opus_frame) {
 }
 
 void Session::on_audio(AudioReceiveCallback callback) {
-    const auto session_id = id_;
     auto received_packets = std::make_shared<std::atomic<std::uint64_t>>(0);
     audio_track_->onMessage(
-        [callback = std::move(callback), received_packets, session_id](rtc::binary packet) {
-            if (!callback || packet.size() < sizeof(rtc::RtpHeader) || rtc::IsRtcp(packet)) {
+        [this, callback = std::move(callback), received_packets](rtc::binary packet) {
+            if (rtc::IsRtcp(packet)) {
                 return;
             }
 
             RtpCpp::RtpPacketView rtp;
-            
-            auto packet_view =
-                std::span<std::uint8_t>(reinterpret_cast<uint8_t*>(packet.data()), packet.size()); // NOLINT
+
+            std::span<std::uint8_t> packet_view(reinterpret_cast<uint8_t*>(packet.data()), packet.size()); // NOLINT
 
             const auto result = rtp.parse(packet_view);
-
             if (result != RtpCpp::Result::kSuccess) {
-                spdlog::warn(
-                    "Peer {} dropped invalid RTP packet: {}",
-                    session_id,
-                    RtpCpp::make_error_code(result).message());
+                spdlog::warn("Peer {} dropped invalid RTP packet: {}", id_, RtpCpp::make_error_code(result).message());
                 return;
             }
 
@@ -108,7 +103,7 @@ void Session::on_audio(AudioReceiveCallback callback) {
             if (header.payload_type_ != kOpusPayloadType) {
                 spdlog::warn(
                     "Peer {} dropped RTP: payload_type={}, expected_payload_type={}",
-                    session_id,
+                    id_,
                     header.payload_type_,
                     kOpusPayloadType);
                 return;
@@ -116,19 +111,42 @@ void Session::on_audio(AudioReceiveCallback callback) {
 
             const auto payload = rtp.payload();
             const auto* payload_begin = reinterpret_cast<const std::byte*>(payload.data());
-            rtc::binary opus_frame(payload_begin, payload_begin + payload.size());
-            const auto count = received_packets->fetch_add(1, std::memory_order_relaxed) + 1;
-            spdlog::info(
-                "Peer {} received audio RTP: packets={}, ssrc={}, sequence={}, timestamp={}, opus_bytes={}",
-                session_id,
-                count,
-                header.ssrc_,
-                header.sequence_number_,
-                header.timestamp_,
-                opus_frame.size());
-            callback(std::move(opus_frame), header.timestamp_);
+
+            if (is_buffering_command_ && opus_transcoder_) {
+                const auto decoded = opus_transcoder_->decode(payload);
+                if (decoded) {
+                    command_buffer_.insert(command_buffer_.end(), decoded->begin(), decoded->end());
+                    spdlog::debug(
+                        "Peer {} decoded Opus audio: {} samples, total buffered command samples={}",
+                        id_,
+                        decoded->size(),
+                        command_buffer_.size());
+                }
+                else {
+                    spdlog::warn("Peer {} failed to decode Opus audio: {}", id_, decoded.error());
+                }
+            }
+            else {
+                rtc::binary opus_frame(payload_begin, payload_begin + payload.size());
+                const auto count = received_packets->fetch_add(1, std::memory_order_relaxed) + 1;
+                callback(std::move(opus_frame), header.timestamp_);
+            }
         },
         nullptr);
+}
+
+bool Session::is_buffering_command() const {
+    return is_buffering_command_;
+}
+
+void Session::set_buffering_command(bool buffering) {
+    is_buffering_command_ = buffering;
+}
+
+std::vector<float> Session::take_command_buffer() {
+    std::vector<float> buffer;
+    buffer.swap(command_buffer_);
+    return buffer;
 }
 
 const std::string& Session::id() const noexcept {

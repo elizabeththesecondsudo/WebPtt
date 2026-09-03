@@ -50,8 +50,9 @@ void Session::do_read() {
                 return;
             }
 
-            auto response = self->router_->route(self->request_);
-            self->do_write(std::move(response));
+            self->router_->route(self->request_, [self](Http::response<Http::string_body> response) {
+                self->do_write(std::move(response));
+            });
         });
 }
 

@@ -1,13 +1,27 @@
 #include "PeerConnectionManager.hpp"
 
+#include "Audio/OpusTranscoder.hpp"
 #include "Session.hpp"
 
+#include <optional>
 #include <spdlog/spdlog.h>
+#include <utility>
 
 namespace WebPtt::WebRtc {
 std::expected<std::shared_ptr<Session>, std::string> PeerConnectionManager::create_session() {
-    auto session = std::make_shared<Session>();
-    const auto [_, inserted] = sessions_.emplace(session->id(), session);
+    std::optional<Audio::OpusTranscoder> opus_transcoder;
+    auto opus_transcoder_result = Audio::OpusTranscoder::make();
+    if (opus_transcoder_result) {
+        opus_transcoder.emplace(std::move(*opus_transcoder_result));
+    }
+    else {
+        spdlog::warn(
+            "Could not create Opus transcoder; peer will operate in relay-only mode: {}",
+            opus_transcoder_result.error());
+    }
+
+    auto session = std::make_shared<Session>(std::move(opus_transcoder));
+    const auto [itr, inserted] = sessions_.emplace(session->id(), session);
     if (!inserted) {
         return std::unexpected("Generated duplicate peer ID: {}" + session->id());
     }
