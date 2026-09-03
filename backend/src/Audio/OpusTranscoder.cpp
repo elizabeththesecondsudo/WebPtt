@@ -4,31 +4,53 @@
 
 #include <cassert>
 
-namespace WebPtt::Audio {
-std::expected<OpusTranscoder, std::string> OpusTranscoder::make() {
-    int error = OPUS_OK;
-    auto* encoder = opus_encoder_create(kSampleRate, kChannels, OPUS_APPLICATION_VOIP, &error);
-    if (encoder == nullptr || error != OPUS_OK) {
-        return std::unexpected("Failed to create Opus encoder: " + std::string(opus_strerror(error)));
-    }
+namespace {
+std::expected<void, std::string> configure_encoder(OpusEncoder* encoder) {
+    constexpr auto kBitrate = 64'000; // 64 kbps
 
-    constexpr int kBitrate = 64'000; // 64 kbps
-    error = opus_encoder_ctl(encoder, OPUS_SET_BITRATE(kBitrate)); // NOLINT
-    if (error == OPUS_OK) {
-        error = opus_encoder_ctl(encoder, OPUS_SET_VBR(0)); // NOLINT
-    }
+    auto error = OPUS_OK;
+    const auto configure = [&error, encoder](auto... args) {
+        if (error == OPUS_OK) {
+            error = opus_encoder_ctl(encoder, args...); // NOLINT
+        }
+    };
+
+    configure(OPUS_SET_BITRATE(kBitrate));
+    configure(OPUS_SET_SIGNAL(OPUS_SIGNAL_VOICE));
+    configure(OPUS_SET_VBR(0));
+
     if (error != OPUS_OK) {
-        opus_encoder_destroy(encoder);
         return std::unexpected("Failed to configure Opus encoder: " + std::string(opus_strerror(error)));
     }
 
+    return {};
+}
+} // namespace
+
+namespace WebPtt::Audio {
+std::expected<OpusTranscoder, std::string> OpusTranscoder::make() {
+    constexpr auto kSampleRate = 48'000;
+    constexpr auto kChannels = 1;
+
+    int error = OPUS_OK;
+    auto* encoder = opus_encoder_create(kSampleRate, kChannels, OPUS_APPLICATION_VOIP, &error);
+    if (error != OPUS_OK) {
+        return std::unexpected("Failed to create Opus encoder: " + std::string(opus_strerror(error)));
+    }
+
+    auto result = configure_encoder(encoder);
+    if (!result) {
+        opus_encoder_destroy(encoder);
+        return std::unexpected(std::move(result.error()));
+    }
+
     auto* decoder = opus_decoder_create(kSampleRate, kChannels, &error);
-    if (decoder == nullptr || error != OPUS_OK) {
+    if (error != OPUS_OK) {
         opus_encoder_destroy(encoder);
         return std::unexpected("Failed to create Opus decoder: " + std::string(opus_strerror(error)));
     }
 
-    return OpusTranscoder(encoder, decoder);
+    return OpusTranscoder{encoder, decoder};
 }
 
 OpusTranscoder::OpusTranscoder(OpusEncoder* encoder, OpusDecoder* decoder) noexcept
