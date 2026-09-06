@@ -6,12 +6,22 @@ import { SessionCard } from "./components/SessionCard";
 import { useCallController } from "./useCallController";
 
 export function VoiceCallPage() {
-  const { session, call, microphone, peerStatus, remoteAudioRef } =
+  const { session, call, microphone, pushToTalk, peerStatus, remoteAudioRef } =
     useCallController();
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#1e1f22] p-4 text-slate-100 sm:p-8">
-      <section className="w-full max-w-xl overflow-hidden rounded-2xl border border-white/5 bg-[#2b2d31] shadow-2xl shadow-black/40">
+    <main
+      className={`flex min-h-screen items-center justify-center p-4 text-slate-100 transition-colors duration-200 sm:p-8 ${
+        pushToTalk.isPressed ? "bg-[#16112b]" : "bg-[#1e1f22]"
+      }`}
+    >
+      <section
+        className={`w-full max-w-xl overflow-hidden rounded-2xl border bg-[#2b2d31] shadow-2xl transition duration-200 ${
+          pushToTalk.isPressed
+            ? "border-violet-400/70 shadow-violet-950/60 ring-2 ring-violet-400/20"
+            : "border-white/5 shadow-black/40"
+        }`}
+      >
         <AppHeader isConnected={session.isConnected} />
         <div className="space-y-5 p-6">
           <SessionCard
@@ -49,6 +59,8 @@ export function VoiceCallPage() {
             isStarting={microphone.isStarting}
             onStart={() => void microphone.start()}
             onStop={microphone.stop}
+            isPushToTalkEnabled={pushToTalk.isEnabled}
+            isPushToTalkPressed={pushToTalk.isPressed}
           />
         </div>
       </section>

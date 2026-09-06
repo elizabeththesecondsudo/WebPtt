@@ -8,7 +8,9 @@
 
 namespace WebPtt::Api {
 
-using Handler = std::function<Http::response<Http::string_body>(const Http::request<Http::string_body>&)>;
+using ResponseHandler = std::function<void(Http::response<Http::string_body>)>;
+using SyncHandler = std::function<Http::response<Http::string_body>(const Http::request<Http::string_body>&)>;
+using AsyncHandler = std::function<void(const Http::request<Http::string_body>&, ResponseHandler)>;
 
 struct ApiEndpoint {
     std::string_view target_;
@@ -29,11 +31,12 @@ struct ApiEndpointHash {
 
 class Router {
 public:
-    void add_route(std::string_view target, Http::verb method, Handler handler);
-    Http::response<Http::string_body> route(const Http::request<Http::string_body>& request);
+    void add_route(std::string_view target, Http::verb method, SyncHandler handler);
+    void add_route(std::string_view target, Http::verb method, AsyncHandler handler);
+    void route(const Http::request<Http::string_body>& request, ResponseHandler handler);
 
 private:
-    std::unordered_map<ApiEndpoint, Handler, ApiEndpointHash> routes_;
+    std::unordered_map<ApiEndpoint, AsyncHandler, ApiEndpointHash> routes_;
 };
 
 } // namespace WebPtt::Api

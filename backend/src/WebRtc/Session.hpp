@@ -1,12 +1,17 @@
 #pragma once
 
+#include "Audio/OpusTranscoder.hpp"
+
 #include <rtc/rtc.hpp>
 
+#include <atomic>
 #include <expected>
 #include <functional>
 #include <memory>
-#include <atomic>
+#include <mutex>
+#include <optional>
 #include <string>
+#include <vector>
 
 namespace WebPtt::WebRtc {
 class Session {
@@ -15,7 +20,7 @@ public:
     using LocalCandidateCallback = std::function<void(rtc::Candidate)>;
     using AudioReceiveCallback = std::function<void(rtc::binary opus_frame, std::uint32_t rtp_timestamp)>;
 
-    Session();
+    explicit Session(std::optional<Audio::OpusTranscoder> opus_transcoder);
 
     [[nodiscard]] const std::string& id() const noexcept;
     void configure(LocalDescriptionCallback on_local_description, LocalCandidateCallback on_local_candidate);
@@ -28,12 +33,19 @@ public:
     [[nodiscard]] bool send_audio(rtc::binary opus_frame);
     void on_audio(AudioReceiveCallback callback);
 
+    [[nodiscard]] bool is_buffering_command() const;
+    void set_buffering_command(bool buffering);
+    std::vector<float> take_command_buffer();
+
 private:
     void create_audio_track();
 
     std::string id_;
     std::shared_ptr<rtc::PeerConnection> peer_connection_;
     std::shared_ptr<rtc::Track> audio_track_;
+    std::optional<Audio::OpusTranscoder> opus_transcoder_;
     std::atomic<std::uint64_t> sent_audio_frames_ = 0;
+    bool is_buffering_command_ = false;
+    std::vector<float> command_buffer_;
 };
 } // namespace WebPtt::WebRtc

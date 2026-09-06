@@ -1,6 +1,6 @@
 include_guard(GLOBAL)
 
-option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
+option(ENABLE_ASAN "Enable Address Sanitizer" ON)
 option(ENABLE_UBSAN "Enable Undefined Behavior Sanitizer" ON)
 option(ENABLE_TSAN "Enable Thread Sanitizer" OFF)
 option(ENABLE_LSAN "Enable Leak Sanitizer" OFF)

@@ -3,6 +3,7 @@
 #include "AppRouter.hpp"
 #include "Core/Types.hpp"
 #include "Types.hpp"
+#include "Stt/Client.hpp"
 
 #include <functional>
 
@@ -15,7 +16,8 @@ public:
     Listener(
         Tcp::acceptor acceptor,
         WebSocketUpgradeCallback on_websocket_upgrade,
-        std::shared_ptr<WebRtc::PeerConnectionManager> peer_connection_manager);
+        std::shared_ptr<WebRtc::PeerConnectionManager> peer_connection_manager,
+        std::shared_ptr<Stt::Client> stt_client);
 
     void listen();
 

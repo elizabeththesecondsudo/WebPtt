@@ -27,6 +27,7 @@ public:
         std::string_view target_session_id);
     [[nodiscard]] bool remove_bridge(std::string_view bridge_id);
     [[nodiscard]] std::shared_ptr<Bridge> find_bridge(std::string_view session_id) const;
+    [[nodiscard]] std::shared_ptr<Bridge> find_bridge_by_id(std::string_view bridge_id) const;
 
 private:
     std::shared_ptr<PeerConnectionManager> peer_connection_manager_;

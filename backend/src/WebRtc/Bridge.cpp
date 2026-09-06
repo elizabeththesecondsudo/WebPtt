@@ -68,4 +68,14 @@ std::string Bridge::target_id() const {
 bool Bridge::active() const noexcept {
     return !first_.expired() && !second_.expired();
 }
+
+std::shared_ptr<Session> Bridge::find_session(std::string_view session_id) const {
+    if (const auto first = first_.lock(); first && first->id() == session_id) {
+        return first;
+    }
+    if (const auto second = second_.lock(); second && second->id() == session_id) {
+        return second;
+    }
+    return nullptr;
+}
 } // namespace WebPtt::WebRtc

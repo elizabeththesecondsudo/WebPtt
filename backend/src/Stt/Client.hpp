@@ -17,15 +17,17 @@ public:
     using TranscribeResult = std::expected<TranscribeResponse, TranscribeError>;
     using TranscribeHandler = std::function<void(TranscribeResult)>;
 
-    explicit Client(Tcp::socket socket);
+    Client(const Executor& executor, const Tcp::endpoint& endpoint);
 
     void transcribe(std::span<const float> samples, TranscribeHandler handler);
 
 private:
+    void write(TranscribeHandler handler);
     void on_write(TranscribeHandler handler);
     void on_read(TranscribeHandler handler);
 
     Tcp::socket socket_;
+    Tcp::endpoint endpoint_;
     boost::beast::flat_buffer buffer_;
     Api::Http::request<Api::Http::vector_body<std::byte>> request_;
     Api::Http::response<Api::Http::string_body> response_;

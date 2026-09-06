@@ -19,5 +19,12 @@ target_link_libraries(
         project_options
         datachannel
         spdlog::spdlog
+        WebPttAudio
         WebPttUtils
+)
+
+target_link_libraries(
+    WebPttWebRtc
+    PRIVATE
+        RtpCpp::RtpCpp
 )

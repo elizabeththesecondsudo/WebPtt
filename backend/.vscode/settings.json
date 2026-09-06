@@ -23,5 +23,7 @@
         "*.inl": "cpp"
     },
 
-    "git.autoRepositoryDetection": "openEditors"
+    "git.enabled": true,
+    "git.autoRepositoryDetection": true,
+    "git.openRepositoryInParentFolders": "always"
 }

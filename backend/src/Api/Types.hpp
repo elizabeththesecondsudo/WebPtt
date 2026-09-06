@@ -34,6 +34,24 @@ struct SessionStatusResponse {
     std::string target_session_id_;
 };
 
+struct PttStartRequest {
+    std::string bridge_id_;
+    std::string session_id_;
+};
+
+struct PttStartResponse {
+    bool success_{};
+};
+
+struct PttStopRequest {
+    std::string bridge_id_;
+    std::string session_id_;
+};
+
+struct PttStopResponse {
+    bool success_{};
+};
+
 struct ErrorResponse {
     std::string error_;
 };

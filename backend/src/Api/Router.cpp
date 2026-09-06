@@ -2,18 +2,25 @@
 #include "Utils.hpp"
 
 namespace WebPtt::Api {
-void Router::add_route(std::string_view target, Http::verb method, Handler handler) {
+void Router::add_route(std::string_view target, Http::verb method, SyncHandler handler) {
+    add_route(target, method, [handler = std::move(handler)](const auto& request, ResponseHandler respond) {
+        respond(handler(request));
+    });
+}
+
+void Router::add_route(std::string_view target, Http::verb method, AsyncHandler handler) {
     ApiEndpoint endpoint{.target_ = target, .method_ = method};
     routes_[endpoint] = std::move(handler);
 }
 
-Http::response<Http::string_body> Router::route(const Http::request<Http::string_body>& request) {
+void Router::route(const Http::request<Http::string_body>& request, ResponseHandler handler) {
     ApiEndpoint endpoint{.target_ = request.target(), .method_ = request.method()};
     auto itr = routes_.find(endpoint);
     if (itr != routes_.end()) {
-        return itr->second(request);
+        itr->second(request, std::move(handler));
+        return;
     }
 
-    return make_basic_api_response(request, Http::status::not_found);
+    handler(make_basic_api_response(request, Http::status::not_found));
 }
 } // namespace WebPtt::Api

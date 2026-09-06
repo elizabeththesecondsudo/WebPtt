@@ -9,6 +9,7 @@ import { useCallActions } from "./useCallActions";
 import { useAppStore } from "./useAppStore";
 import { useCopySessionId } from "./useCopySessionId";
 import { usePeerConnection } from "./usePeerConnection";
+import { usePushToTalk } from "./usePushToTalk";
 import { useRemoteAudio } from "./useRemoteAudio";
 
 export function useCallController() {
@@ -67,6 +68,17 @@ export function useCallController() {
   }, [microphone.error]);
 
   const isActive = Boolean(activeBridgeId);
+  const isPushToTalkEnabled =
+    isActive &&
+    !isIncomingCall &&
+    microphone.isCapturing &&
+    websocket.status === "connected" &&
+    peer.status === "connected";
+  const pushToTalk = usePushToTalk({
+    bridgeId: activeBridgeId,
+    sessionId: websocket.sessionId,
+    enabled: isPushToTalkEnabled,
+  });
   const canCall =
     websocket.status === "connected" &&
     Boolean(websocket.sessionId) &&
@@ -107,6 +119,10 @@ export function useCallController() {
       ...presentation,
     },
     microphone,
+    pushToTalk: {
+      ...pushToTalk,
+      isEnabled: isPushToTalkEnabled,
+    },
     peerStatus: peer.status,
     remoteAudioRef,
   };

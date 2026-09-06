@@ -7,9 +7,10 @@ namespace WebPtt::Api {
 Listener::Listener(
     Tcp::acceptor acceptor,
     WebSocketUpgradeCallback on_websocket_upgrade,
-    std::shared_ptr<WebRtc::PeerConnectionManager> peer_connection_manager)
+    std::shared_ptr<WebRtc::PeerConnectionManager> peer_connection_manager,
+    std::shared_ptr<Stt::Client> stt_client)
     : acceptor_(std::move(acceptor))
-    , router_(std::make_shared<AppRouter>(std::move(peer_connection_manager)))
+    , router_(std::make_shared<AppRouter>(std::move(peer_connection_manager), std::move(stt_client)))
     , on_websocket_upgrade_(std::move(on_websocket_upgrade)) {
     router_->register_routes();
     const auto endpoint = acceptor_.local_endpoint();

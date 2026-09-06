@@ -16,6 +16,7 @@ public:
     [[nodiscard]] std::string source_id() const;
     [[nodiscard]] std::string target_id() const;
     [[nodiscard]] bool active() const noexcept;
+    [[nodiscard]] std::shared_ptr<Session> find_session(std::string_view session_id) const;
 
 private:
     std::string id_;

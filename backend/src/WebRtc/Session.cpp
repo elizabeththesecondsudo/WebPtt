@@ -1,5 +1,8 @@
 #include "Session.hpp"
+#include "rtc/rtp.hpp"
 #include "utils.hpp"
+
+#include <RtpCpp/RtpPacket.hpp>
 
 #include "Utils/Uuid.hpp"
 #include <chrono>
@@ -26,9 +29,10 @@ rtc::SSRC make_ssrc() {
 }
 } // namespace
 
-Session::Session()
+Session::Session(std::optional<Audio::OpusTranscoder> opus_transcoder)
     : id_(Utils::generate_uuid())
-    , peer_connection_(std::make_shared<rtc::PeerConnection>(rtc::Configuration{})) {
+    , peer_connection_(std::make_shared<rtc::PeerConnection>(rtc::Configuration{}))
+    , opus_transcoder_(std::move(opus_transcoder)) {
     create_audio_track();
 }
 
@@ -78,66 +82,71 @@ bool Session::send_audio(rtc::binary opus_frame) {
 }
 
 void Session::on_audio(AudioReceiveCallback callback) {
-    const auto session_id = id_;
     auto received_packets = std::make_shared<std::atomic<std::uint64_t>>(0);
     audio_track_->onMessage(
-        [callback = std::move(callback), received_packets, session_id](rtc::binary packet) {
-            if (!callback || packet.size() < sizeof(rtc::RtpHeader) || rtc::IsRtcp(packet)) {
+        [this, callback = std::move(callback), received_packets](rtc::binary packet) {
+            if (rtc::IsRtcp(packet)) {
                 return;
             }
 
-            const auto* rtp = reinterpret_cast<const rtc::RtpHeader*>(packet.data());
-            if (rtp->version() != 2 || rtp->payloadType() != kOpusPayloadType) {
+            RtpCpp::RtpPacketView rtp;
+
+            std::span<std::uint8_t> packet_view(reinterpret_cast<uint8_t*>(packet.data()), packet.size()); // NOLINT
+
+            const auto result = rtp.parse(packet_view);
+            if (result != RtpCpp::Result::kSuccess) {
+                spdlog::warn("Peer {} dropped invalid RTP packet: {}", id_, RtpCpp::make_error_code(result).message());
+                return;
+            }
+
+            const auto& header = rtp.get_header();
+            if (header.payload_type_ != kOpusPayloadType) {
                 spdlog::warn(
-                    "Peer {} dropped RTP: version={}, payload_type={}, expected_payload_type={}",
-                    session_id,
-                    rtp->version(),
-                    rtp->payloadType(),
+                    "Peer {} dropped RTP: payload_type={}, expected_payload_type={}",
+                    id_,
+                    header.payload_type_,
                     kOpusPayloadType);
                 return;
             }
 
-            std::size_t payload_offset = sizeof(rtc::RtpHeader) + (rtp->csrcCount() * sizeof(rtc::SSRC));
-            if (payload_offset > packet.size()) {
-                return;
-            }
+            const auto payload = rtp.payload();
+            const auto* payload_begin = reinterpret_cast<const std::byte*>(payload.data());
 
-            if (rtp->extension()) {
-                if (packet.size() - payload_offset < sizeof(rtc::RtpExtensionHeader)) {
-                    return;
+            if (is_buffering_command_ && opus_transcoder_) {
+                const auto decoded = opus_transcoder_->decode(payload);
+                if (decoded) {
+                    command_buffer_.insert(command_buffer_.end(), decoded->begin(), decoded->end());
+                    spdlog::debug(
+                        "Peer {} decoded Opus audio: {} samples, total buffered command samples={}",
+                        id_,
+                        decoded->size(),
+                        command_buffer_.size());
                 }
-                const auto* extension =
-                    reinterpret_cast<const rtc::RtpExtensionHeader*>(packet.data() + payload_offset);
-                payload_offset += sizeof(rtc::RtpExtensionHeader) + extension->getSize();
-                if (payload_offset > packet.size()) {
-                    return;
+                else {
+                    spdlog::warn("Peer {} failed to decode Opus audio: {}", id_, decoded.error());
                 }
             }
-
-            std::size_t payload_end = packet.size();
-            if (rtp->padding()) {
-                const auto padding_size = std::to_integer<std::uint8_t>(packet.back());
-                if (padding_size == 0 || padding_size > payload_end - payload_offset) {
-                    return;
-                }
-                payload_end -= padding_size;
+            else {
+                rtc::binary opus_frame(payload_begin, payload_begin + payload.size());
+                const auto count = received_packets->fetch_add(1, std::memory_order_relaxed) + 1;
+                callback(std::move(opus_frame), header.timestamp_);
             }
-
-            rtc::binary opus_frame(
-                packet.begin() + static_cast<std::ptrdiff_t>(payload_offset),
-                packet.begin() + static_cast<std::ptrdiff_t>(payload_end));
-            const auto count = received_packets->fetch_add(1, std::memory_order_relaxed) + 1;
-            spdlog::info(
-                "Peer {} received audio RTP: packets={}, ssrc={}, sequence={}, timestamp={}, opus_bytes={}",
-                session_id,
-                count,
-                rtp->ssrc(),
-                rtp->seqNumber(),
-                rtp->timestamp(),
-                opus_frame.size());
-            callback(std::move(opus_frame), rtp->timestamp());
         },
         nullptr);
+}
+
+bool Session::is_buffering_command() const {
+    return is_buffering_command_;
+}
+
+void Session::set_buffering_command(bool buffering) {
+    is_buffering_command_ = buffering;
+}
+
+std::vector<float> Session::take_command_buffer() {
+    std::vector<float> buffer;
+    buffer.swap(command_buffer_);
+    return buffer;
 }
 
 const std::string& Session::id() const noexcept {

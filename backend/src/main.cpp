@@ -2,6 +2,7 @@
 #include "Api/WebSocketManager.hpp"
 #include "Core/Coordinator.hpp"
 #include "Core/Settings.hpp"
+#include "Stt/Client.hpp"
 #include "Utils/Net.hpp"
 #include "WebRtc/PeerConnectionManager.hpp"
 #include <spdlog/spdlog.h>
@@ -29,6 +30,13 @@ int main() {
         return EXIT_FAILURE;
     }
 
+    auto stt_endpoint = WebPtt::Utils::parse_endpoint(stt.address_, stt.port_);
+    if (!stt_endpoint) {
+        spdlog::critical("Invalid STT service endpoint: {}", stt_endpoint.error());
+        return EXIT_FAILURE;
+    }
+    auto stt_client = std::make_shared<WebPtt::Stt::Client>(io_context.get_executor(), *stt_endpoint);
+
     auto websocket_manager = std::make_shared<WebPtt::Api::WebSocketManager>();
     auto peer_connection_manager = std::make_shared<WebPtt::WebRtc::PeerConnectionManager>();
     auto coordinator = std::make_shared<WebPtt::Core::Coordinator>(websocket_manager, peer_connection_manager);
@@ -38,7 +46,8 @@ int main() {
         [coordinator](WebPtt::Tcp::socket socket, WebPtt::Api::Http::request<WebPtt::Api::Http::string_body> request) {
             coordinator->attatch(std::move(socket), std::move(request));
         },
-        peer_connection_manager);
+        peer_connection_manager,
+        std::move(stt_client));
     listener.listen();
 
     io_context.run();
