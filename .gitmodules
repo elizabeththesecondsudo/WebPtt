@@ -1,0 +1,3 @@
+[submodule "backend/external"]
+	path = backend/external
+	url = https://github.com/VinMing/soundtouch.git
