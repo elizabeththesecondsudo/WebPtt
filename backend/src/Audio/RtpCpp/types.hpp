@@ -8,12 +8,10 @@
 namespace RtpCpp {
 
 template <typename T>
-concept ContiguousBuffer =
-    std::ranges::contiguous_range<T> && sizeof(std::ranges::range_value_t<T>) == 1;
+concept ContiguousBuffer = std::ranges::contiguous_range<T> && sizeof(std::ranges::range_value_t<T>) == 1;
 
 template <typename C>
-concept ResizableContiguousBuffer =
-    ContiguousBuffer<C> && requires(C& c, std::size_t n) { c.resize(n); };
+concept ResizableContiguousBuffer = ContiguousBuffer<C> && requires(C& c, std::size_t n) { c.resize(n); };
 
 using RtpBuffer = std::vector<std::uint8_t>;
 
@@ -51,22 +49,14 @@ public:
     // Map the integer error value to a descriptive string message
     std::string message(int ev) const override {
         switch (static_cast<Result>(ev)) {
-        case Result::kSuccess:
-            return "Success";
-        case Result::kBufferTooSmall:
-            return "Buffer too small";
-        case Result::kParseBufferOverflow:
-            return "Parse overflow buffer length";
-        case Result::kInvalidHeaderLength:
-            return "Invalid header length";
-        case Result::kInvalidCsrcCount:
-            return "Invalid csrc count";
-        case Result::kFixedBufferTooSmall:
-            return "Fixed buffer too small";
-        case Result::kParseExtensionOverflow:
-            return "Extension overflow buffer length";
-        default:
-            return "Unknown internal error.";
+        case Result::kSuccess: return "Success";
+        case Result::kBufferTooSmall: return "Buffer too small";
+        case Result::kParseBufferOverflow: return "Parse overflow buffer length";
+        case Result::kInvalidHeaderLength: return "Invalid header length";
+        case Result::kInvalidCsrcCount: return "Invalid csrc count";
+        case Result::kFixedBufferTooSmall: return "Fixed buffer too small";
+        case Result::kParseExtensionOverflow: return "Extension overflow buffer length";
+        default: return "Unknown internal error.";
         }
     }
 };

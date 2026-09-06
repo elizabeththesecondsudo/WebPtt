@@ -44,9 +44,7 @@ struct ExtensionHeader {
         length_ = 0;
     }
 
-    [[nodiscard]] std::size_t data_size_bytes() const {
-        return static_cast<std::size_t>(length_) * 4;
-    }
+    [[nodiscard]] std::size_t data_size_bytes() const { return static_cast<std::size_t>(length_) * 4; }
     [[nodiscard]] std::size_t size_bytes() const { return 4 + data_size_bytes(); }
 };
 
@@ -196,8 +194,7 @@ private:
         payload_offset_ = kFixedRTPSize;
 
         // Version is the first 2 bits in octet 0
-        const std::uint8_t version =
-            (buffer_[Version::kOffset] & Version::kMask) >> Version::kShift;
+        const std::uint8_t version = (buffer_[Version::kOffset] & Version::kMask) >> Version::kShift;
 
 
         // RFC 3550 RTP version is 2.
@@ -207,9 +204,7 @@ private:
 
         // Padding bit is the 2 bit in octet 0
         const bool is_padded =
-            static_cast<int>(
-                ((buffer_[PaddingBit::kOffset] & PaddingBit::kMask) >> PaddingBit::kShift) != 0U) >
-            0;
+            static_cast<int>(((buffer_[PaddingBit::kOffset] & PaddingBit::kMask) >> PaddingBit::kShift) != 0U) > 0;
         if (is_padded) {
             padding_bytes_ = buffer_[packet_size_ - 1];
 
@@ -225,9 +220,7 @@ private:
         }
 
         // extension bit is the 3 bit in octet 0
-        fields_.is_extended_ =
-            (((buffer_[ExtensionBit::kOffset] & ExtensionBit::kMask) >> ExtensionBit::kShift) !=
-             0U);
+        fields_.is_extended_ = (((buffer_[ExtensionBit::kOffset] & ExtensionBit::kMask) >> ExtensionBit::kShift) != 0U);
 
 
         // csrc count is 4 bits at offset 4 octet 0
@@ -254,12 +247,11 @@ private:
 #endif
 
         //  sequrence number is 16 bits at offset 16 octet 2 and 3
-        fields_.sequence_number_ = Detail::read_big_endian<decltype(fields_.sequence_number_)>(
-            &buffer_[SequenceNumber::kOffset]);
+        fields_.sequence_number_ =
+            Detail::read_big_endian<decltype(fields_.sequence_number_)>(&buffer_[SequenceNumber::kOffset]);
 
         // timestamp is 32 bits at offset 32 octet: 4, 5, 6, 7,
-        fields_.timestamp_ =
-            Detail::read_big_endian<decltype(fields_.timestamp_)>(&buffer_[Timestamp::kOffset]);
+        fields_.timestamp_ = Detail::read_big_endian<decltype(fields_.timestamp_)>(&buffer_[Timestamp::kOffset]);
 
         // ssrc identifier is 32 bits at offset 64 octet: 8, 9 ,10 ,11
         fields_.ssrc_ = Detail::read_big_endian<decltype(fields_.ssrc_)>(&buffer_[Ssrc::kOffset]);
@@ -282,8 +274,7 @@ private:
         // extension id is the first 16 bits of extension header.
         // extension_header_->id_ = (buffer_[extension_offset] << 8U) |
         // buffer_[extension_offset + 1];
-        extension_header_.id_ =
-            Detail::read_big_endian<decltype(extension_header_.id_)>(&buffer_[extension_offset_]);
+        extension_header_.id_ = Detail::read_big_endian<decltype(extension_header_.id_)>(&buffer_[extension_offset_]);
 
         // extension data length is after the extension id. which is 2 bytes from
         // the offset.
@@ -366,8 +357,8 @@ public:
             if (updated_packet_size > buffer_.size()) {
                 buffer_.resize(updated_packet_size);
             }
-
-        } else if (padding_bytes > buffer_.size() - kFixedRTPSize) {
+        }
+        else if (padding_bytes > buffer_.size() - kFixedRTPSize) {
             return Result::kBufferTooSmall;
         }
 
@@ -384,8 +375,7 @@ public:
         }
 
         buffer_[PaddingBit::kOffset] &= static_cast<std::uint8_t>(~PaddingBit::kMask);
-        buffer_[PaddingBit::kOffset] |=
-            (static_cast<std::uint8_t>(pad_flag) << PaddingBit::kShift) & PaddingBit::kMask;
+        buffer_[PaddingBit::kOffset] |= (static_cast<std::uint8_t>(pad_flag) << PaddingBit::kShift) & PaddingBit::kMask;
 
         return Result::kSuccess;
     }
@@ -421,7 +411,8 @@ public:
         if (updated_packet_size > buffer_.size()) {
             if constexpr (ResizableContiguousBuffer<B>) {
                 buffer_.resize(updated_packet_size);
-            } else {
+            }
+            else {
                 return Result::kBufferTooSmall;
             }
         }
@@ -454,7 +445,8 @@ public:
         if (updated_packet_size > buffer_.size()) {
             if constexpr (ResizableContiguousBuffer<B>) {
                 buffer_.resize(updated_packet_size);
-            } else {
+            }
+            else {
                 return Result::kBufferTooSmall;
             }
         }
@@ -504,8 +496,8 @@ public:
             if (end > packet_size_) {
                 buffer_.resize(end);
             }
-
-        } else if (end > this->buffer_capacity()) {
+        }
+        else if (end > this->buffer_capacity()) {
             return Result::kBufferTooSmall;
         }
 
@@ -520,12 +512,8 @@ public:
     PayloadSpan payload() {
         assert(payload_size_ < packet_size_ && "payload_size bigger then packet_size_ size");
         assert(payload_size_ < buffer_.size() && "payload_size bigger then buffer_ size");
-        assert(
-            (payload_offset_ >= buffer_.size() && payload_size_ > 0) == false &&
-            "payload out of bound buffer_");
-        assert(
-            (payload_offset_ >= packet_size_ && payload_size_ > 0) == false &&
-            "payload out of bound packet_size");
+        assert((payload_offset_ >= buffer_.size() && payload_size_ > 0) == false && "payload out of bound buffer_");
+        assert((payload_offset_ >= packet_size_ && payload_size_ > 0) == false && "payload out of bound packet_size");
         return std::span<std::uint8_t>(buffer_.data() + payload_offset_, payload_size_);
     }
 
@@ -536,12 +524,8 @@ public:
 
         const size_t data_offset = extension_offset_ + 4;
 
-        assert(
-            extension_header_.size_bytes() < packet_size_ &&
-            "extension size bigger then packet_size_ size");
-        assert(
-            extension_header_.size_bytes() < buffer_.size() &&
-            "extension size bigger then buffer_ size");
+        assert(extension_header_.size_bytes() < packet_size_ && "extension size bigger then packet_size_ size");
+        assert(extension_header_.size_bytes() < buffer_.size() && "extension size bigger then buffer_ size");
         assert(
             (data_offset >= buffer_.size() && extension_header_.data_size_bytes() > 0) == false &&
             "extension data out of bound buffer_");
@@ -582,8 +566,7 @@ private:
         assert(packet_size_ >= kFixedRTPSize);
 
         buffer_[Version::kOffset] &= static_cast<std::uint8_t>(~Version::kMask);
-        buffer_[Version::kOffset] |=
-            (static_cast<std::uint8_t>(2) << Version::kShift) & Version::kMask;
+        buffer_[Version::kOffset] |= (static_cast<std::uint8_t>(2) << Version::kShift) & Version::kMask;
     }
 
     void write_csrc() {
@@ -614,7 +597,8 @@ private:
         if (updated_packet_size > buffer_.size()) {
             if constexpr (ResizableContiguousBuffer<B>) {
                 buffer_.resize(updated_packet_size);
-            } else {
+            }
+            else {
                 return Result::kBufferTooSmall;
             }
         }
@@ -640,9 +624,7 @@ private:
     }
 
 
-    [[nodiscard]] std::size_t csrc_list_size() const noexcept {
-        return fields_.csrc_count_ * kCsrcIdsize;
-    }
+    [[nodiscard]] std::size_t csrc_list_size() const noexcept { return fields_.csrc_count_ * kCsrcIdsize; }
     [[nodiscard]] std::size_t buffer_capacity() const {
         if constexpr (ResizableContiguousBuffer<B>) {
             return buffer_.capacity();
@@ -660,8 +642,7 @@ private:
         fields_.is_extended_ = flag;
         buffer_[ExtensionBit::kOffset] &= static_cast<std::uint8_t>(~ExtensionBit::kMask);
         buffer_[ExtensionBit::kOffset] |=
-            (static_cast<std::uint8_t>(fields_.is_extended_) << ExtensionBit::kShift) &
-            ExtensionBit::kMask;
+            (static_cast<std::uint8_t>(fields_.is_extended_) << ExtensionBit::kShift) & ExtensionBit::kMask;
     }
 
     [[nodiscard]] std::size_t current_ext_size_bytes() const noexcept {

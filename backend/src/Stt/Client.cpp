@@ -21,7 +21,8 @@ void assign_basic_fields(Api::Http::request<Api::Http::vector_body<std::byte>>& 
 } // namespace
 
 Client::Client(const Executor& executor, const Tcp::endpoint& endpoint)
-    : socket_(executor), endpoint_(endpoint) {}
+    : socket_(executor)
+    , endpoint_(endpoint) {}
 
 void Client::transcribe(std::span<const float> samples, TranscribeHandler handler) {
     // Each transcription owns its connection and HTTP state. An idle service

@@ -12,4 +12,4 @@ template <std::integral To, std::integral From>
     return static_cast<To>(value);
 }
 
-} // namespace RtpCpp
+} // namespace RtpCpp::Detail
