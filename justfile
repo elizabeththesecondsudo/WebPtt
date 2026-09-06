@@ -7,8 +7,9 @@ set working-directory := "."
 default:
     @just --list
 
-# Install the frontend and STT dependencies.
+# Download submodules and install the frontend and STT dependencies.
 install:
+    git submodule update --init --recursive
     cd frontend && npm ci
     cd stt && .venv/bin/python -m pip install -e .
 
