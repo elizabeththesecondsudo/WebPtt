@@ -151,7 +151,7 @@ Http::response<Http::string_body> AppRouter::ptt_start(const Http::request<Http:
         return make_error_response(request, Http::status::bad_request, parsed.error());
     }
 
-    auto bridge = bridge_manager_.find_bridge(parsed->bridge_id_);
+    auto bridge = bridge_manager_.find_bridge_by_id(parsed->bridge_id_);
     if (!bridge) {
         return make_error_response(request, Http::status::not_found, "bridge was not found");
     }
@@ -172,7 +172,7 @@ void AppRouter::ptt_stop(const Http::request<Http::string_body>& request, Respon
         return;
     }
 
-    auto bridge = bridge_manager_.find_bridge(parsed->bridge_id_);
+    auto bridge = bridge_manager_.find_bridge_by_id(parsed->bridge_id_);
     if (!bridge) {
         handler(make_error_response(request, Http::status::not_found, "bridge was not found"));
         return;
@@ -186,6 +186,10 @@ void AppRouter::ptt_stop(const Http::request<Http::string_body>& request, Respon
 
     session->set_buffering_command(false);
     auto samples = session->take_command_buffer();
+    if (samples.empty()) {
+        handler(make_json_response(request, Http::status::ok, PttStopResponse{.success_ = true}));
+        return;
+    }
     stt_client_->transcribe(
         samples,
         [request, handler = std::move(handler)](Stt::Client::TranscribeResult transcription) {

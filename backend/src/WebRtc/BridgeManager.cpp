@@ -72,4 +72,14 @@ std::shared_ptr<Bridge> BridgeManager::find_bridge(std::string_view session_id) 
     }
     return matching->second;
 }
+
+std::shared_ptr<Bridge> BridgeManager::find_bridge_by_id(std::string_view bridge_id) const {
+    const auto matching = std::ranges::find_if(bridges_by_session_, [bridge_id](const auto& entry) {
+        return entry.second->id() == bridge_id;
+    });
+    if (matching == bridges_by_session_.end() || !matching->second->active()) {
+        return nullptr;
+    }
+    return matching->second;
+}
 } // namespace WebPtt::WebRtc

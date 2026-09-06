@@ -16,28 +16,33 @@ void assign_basic_fields(Api::Http::request<Api::Http::vector_body<std::byte>>& 
     request.version(kHttpVersion);
     request.set(boost::beast::http::field::host, host);
     request.set(boost::beast::http::field::content_type, "application/octet-stream");
-    request.keep_alive(true);
+    request.keep_alive(false);
 }
 } // namespace
 
-Client::Client(Tcp::socket socket)
-    : socket_(std::move(socket)) {}
+Client::Client(const Executor& executor, const Tcp::endpoint& endpoint)
+    : socket_(executor), endpoint_(endpoint) {}
 
 void Client::transcribe(std::span<const float> samples, TranscribeHandler handler) {
-    boost::system::error_code error;
-    auto remote_endpoint = socket_.remote_endpoint(error);
-    if (error) {
-        handler(std::unexpected(error.message()));
-        return;
-    }
-    auto host = remote_endpoint.address().to_string();
-
-    request_ = {};
-    assign_basic_fields(request_, host);
+    // Each transcription owns its connection and HTTP state. An idle service
+    // connection may have closed, and multiple users can transcribe at once.
+    auto operation = std::make_shared<Client>(socket_.get_executor(), endpoint_);
+    assign_basic_fields(operation->request_, endpoint_.address().to_string());
     const auto sample_bytes = std::as_bytes(samples);
-    request_.body().assign(sample_bytes.begin(), sample_bytes.end());
-    request_.prepare_payload();
+    operation->request_.body().assign(sample_bytes.begin(), sample_bytes.end());
+    operation->request_.prepare_payload();
+    operation->socket_.async_connect(
+        endpoint_,
+        [operation, handler = std::move(handler)](boost::system::error_code error) mutable {
+            if (error) {
+                handler(std::unexpected("Could not connect to speech-to-text service: " + error.message()));
+                return;
+            }
+            operation->write(std::move(handler));
+        });
+}
 
+void Client::write(TranscribeHandler handler) {
     boost::beast::http::async_write(
         socket_,
         request_,

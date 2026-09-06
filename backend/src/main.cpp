@@ -30,12 +30,12 @@ int main() {
         return EXIT_FAILURE;
     }
 
-    auto stt_socket_res = WebPtt::Utils::create_socket(io_context.get_executor(), stt.address_, stt.port_);
-    if (!stt_socket_res) {
-        spdlog::critical("Failed to connect to STT service: {}", stt_socket_res.error());
+    auto stt_endpoint = WebPtt::Utils::parse_endpoint(stt.address_, stt.port_);
+    if (!stt_endpoint) {
+        spdlog::critical("Invalid STT service endpoint: {}", stt_endpoint.error());
         return EXIT_FAILURE;
     }
-    auto stt_client = std::make_shared<WebPtt::Stt::Client>(std::move(stt_socket_res.value()));
+    auto stt_client = std::make_shared<WebPtt::Stt::Client>(io_context.get_executor(), *stt_endpoint);
 
     auto websocket_manager = std::make_shared<WebPtt::Api::WebSocketManager>();
     auto peer_connection_manager = std::make_shared<WebPtt::WebRtc::PeerConnectionManager>();
