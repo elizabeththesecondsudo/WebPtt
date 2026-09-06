@@ -1,5 +1,8 @@
 set shell := ["bash", "-c"]
 
+# Run recipes from the project root, including when invoked from a subfolder.
+set working-directory := "."
+
 # List all available recipes when running `just` without arguments.
 default:
     @just --list
