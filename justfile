@@ -1,11 +1,15 @@
 set shell := ["bash", "-c"]
 
+# Run recipes from the project root, including when invoked from a subfolder.
+set working-directory := "."
+
 # List all available recipes when running `just` without arguments.
 default:
     @just --list
 
-# Install the frontend and STT dependencies.
+# Download submodules and install the frontend and STT dependencies.
 install:
+    git submodule update --init --recursive
     cd frontend && npm ci
     cd stt && .venv/bin/python -m pip install -e .
 
