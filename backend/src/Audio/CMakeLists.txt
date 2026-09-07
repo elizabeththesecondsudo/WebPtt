@@ -21,6 +21,7 @@ add_library(
     WebPttAudio
     STATIC
         OpusTranscoder.cpp
+        Gain.cpp
 )
 
 target_include_directories(
