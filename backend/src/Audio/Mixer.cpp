@@ -7,7 +7,7 @@ namespace WebPtt::Audio {
 Mixer::Mixer(std::vector<float> file_content)
     : file_content_(std::move(file_content)) {}
 
-void Mixer::process(std::span<float> samples) {
+void Mixer::process(std::vector<float>& samples) {
     if (file_content_.empty()) {
         return;
     }

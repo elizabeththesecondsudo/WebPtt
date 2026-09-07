@@ -1,15 +1,16 @@
 #pragma once
 
+#include "Effect.hpp"
+
 #include <cstddef>
-#include <span>
 #include <vector>
 
 namespace WebPtt::Audio {
-class Mixer {
+class Mixer : public Effect {
 public:
     explicit Mixer(std::vector<float> file_content);
 
-    void process(std::span<float> samples);
+    void process(std::vector<float>& samples) override;
 
 private:
     std::vector<float> file_content_;

@@ -1,13 +1,13 @@
 #pragma once
 
-#include <span>
+#include "Effect.hpp"
 
 namespace WebPtt::Audio {
-class Gain {
+class Gain : public Effect {
 public:
     explicit Gain(float decibels);
 
-    void process(std::span<float> samples) const;
+    void process(std::vector<float>& samples) override;
 
 private:
     float gain_factor_;

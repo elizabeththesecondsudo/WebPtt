@@ -24,17 +24,17 @@ Tempo::Tempo(float tempo) {
     sound_touch_.setTempo(clamp_tempo(tempo));
 }
 
-std::vector<float> Tempo::process(std::span<const float> samples) {
-    constexpr std::size_t kReceiveBufferFrames = 4096;
+void Tempo::process(std::vector<float>& samples) {
+    constexpr size_t kReceiveBufferFrames = 4096;
     if (samples.empty()) {
-        return {};
+        return;
     }
 
     const std::size_t input_frames = samples.size() / kChannels;
 
     sound_touch_.putSamples(samples.data(), static_cast<unsigned int>(input_frames));
 
-    std::vector<float> output;
+    samples.clear();
 
     std::vector<float> receive_buffer(kReceiveBufferFrames * kChannels);
 
@@ -46,14 +46,12 @@ std::vector<float> Tempo::process(std::span<const float> samples) {
             break;
         }
 
-        const std::size_t received_samples = static_cast<std::size_t>(received_frames) * kChannels;
+        const auto received_samples = static_cast<size_t>(received_frames) * kChannels;
 
-        output.insert(
-            output.end(),
+        samples.insert(
+            samples.end(),
             receive_buffer.begin(),
             receive_buffer.begin() + static_cast<long>(received_samples));
     }
-
-    return output;
 }
 } // namespace WebPtt::Audio

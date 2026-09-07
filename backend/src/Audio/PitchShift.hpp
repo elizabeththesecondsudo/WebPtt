@@ -1,18 +1,18 @@
 #pragma once
 
-#include <span>
+#include "Effect.hpp"
+
 #include <vector>
 
 #include <SoundTouch.h>
 
 namespace WebPtt::Audio {
 
-class PitchShift {
+class PitchShift : public Effect {
 public:
     explicit PitchShift(float semitones);
 
-    [[nodiscard]]
-    std::vector<float> process(std::span<const float> samples);
+    void process(std::vector<float>& samples) override;
 
 private:
     soundtouch::SoundTouch sound_touch_;

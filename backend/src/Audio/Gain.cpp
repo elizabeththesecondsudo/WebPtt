@@ -21,7 +21,7 @@ constexpr float db_to_gain(float decibels) {
 Gain::Gain(float decibels)
     : gain_factor_(db_to_gain(decibels)) {}
 
-void Gain::process(std::span<float> samples) const {
+void Gain::process(std::vector<float>& samples) {
     for (auto& sample : samples) {
         const auto amplified_sample = sample * gain_factor_;
 
