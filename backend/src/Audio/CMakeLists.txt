@@ -24,6 +24,7 @@ add_library(
         Gain.cpp
         Mixer.cpp
         Tempo.cpp
+        PitchShift.cpp
 )
 
 target_include_directories(
