@@ -22,6 +22,7 @@ add_library(
     STATIC
         OpusTranscoder.cpp
         Gain.cpp
+        Mixer.cpp
 )
 
 target_include_directories(
