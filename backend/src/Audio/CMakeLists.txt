@@ -23,6 +23,7 @@ add_library(
         OpusTranscoder.cpp
         Gain.cpp
         Mixer.cpp
+        Tempo.cpp
 )
 
 target_include_directories(
@@ -36,4 +37,5 @@ target_link_libraries(
     PUBLIC
         project_options
         Opus::opus
+        SoundTouch
 )
