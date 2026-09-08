@@ -25,6 +25,8 @@ add_library(
         Mixer.cpp
         Tempo.cpp
         PitchShift.cpp
+        EffectFactory.cpp
+        Wav.cpp
 )
 
 target_include_directories(
@@ -39,4 +41,5 @@ target_link_libraries(
         project_options
         Opus::opus
         SoundTouch
+        dr_wav_headers
 )

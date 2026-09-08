@@ -37,5 +37,4 @@ target_link_libraries(
         WebPttCore
         WebPttStt
         WebPttUtils
-        dr_wav_headers
 )
