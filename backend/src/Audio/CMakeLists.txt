@@ -26,6 +26,7 @@ add_library(
         Tempo.cpp
         PitchShift.cpp
         EffectFactory.cpp
+        EffectStore.cpp
         Wav.cpp
 )
 
